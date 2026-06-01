@@ -58,13 +58,13 @@ After loading the package (or the theme), the palette is available in two ways:
 
 The canonical definitions are the HSLuv constants (`rustcity-*-hsl`). Hex values and the alist accessors are derived from them.
 
-Example JSON (truncated):
+Example JSON (truncated, neon variant):
 ```json
 {
-  "black": "#2f2a3a",
+  "black": "#29345f",
   ...
-  "background": "#2f2a3a",
-  "foreground": "#a89fb0"
+  "background": "#181f3d",
+  "foreground": "#8995d1"
 }
 ```
 

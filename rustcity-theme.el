@@ -3,7 +3,7 @@
 ;; Author: yoshzucker
 ;; Maintainer: yoshzucker
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.1") (hsluv "1.0"))
+;; Package-Requires: ((emacs "27.1") (hsluv "1.0"))
 ;; Keywords: faces, themes, rustcity, downpour, neon
 ;; Homepage: https://github.com/yoshzucker/rustcity-theme
 ;; License: MIT
@@ -30,7 +30,7 @@
 ;;; Code:
 
 (require 'hsluv)
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 
 (deftheme rustcity
   "A theme inspired by a rusted industrial cityscape—silent under neon rain, and hollow in a daylight downpour.")
@@ -76,7 +76,7 @@
     (brightblue    . (280  55  63))))
 
 (defun rustcity--hex-palette (hsl-palette)
-  "Convert HSL alist to hex alist using hsluv-hsluv-to-hex."
+  "Convert HSL alist to hex alist using `hsluv-hsluv-to-hex'."
   (cl-loop for entry in hsl-palette
            for name = (car entry)
            for hsl = (cdr entry)
@@ -90,8 +90,8 @@
 
 ;;;###autoload
 (defun rustcity-palette (&optional variant)
-  "Return hex alist for VARIANT or current `frame-background-mode'.
-VARIANT is `neon' or `downpour' (default from frame-background-mode).
+  "Return hex color alist for VARIANT or current `frame-background-mode'.
+VARIANT is `neon' or `downpour' (defaults from `frame-background-mode').
 For external tools, prefer `rustcity-export-palette'."
   (let ((v (or variant
                (if (eq frame-background-mode 'light) 'downpour 'neon))))
@@ -124,7 +124,7 @@ For external tools, prefer `rustcity-export-palette'."
 
   (custom-theme-set-faces
    'rustcity
-   ;; --- Core (from previous minimal + expanded) ---
+   ;; --- Core ---
    `(default ((,class (:foreground ,foreground :background ,background))))
    `(fixed-pitch ((,class (:family unspecified))))
    `(variable-pitch ((,class (:family unspecified))))
@@ -150,7 +150,7 @@ For external tools, prefer `rustcity-export-palette'."
    `(success ((,class (:foreground ,green))))
    `(tooltip ((,class (:foreground ,foreground :background ,brightyellow))))
 
-   ;; --- Font-lock (expanded) ---
+   ;; --- Font-lock ---
    `(font-lock-comment-face ((,class (:foreground ,white :slant italic))))
    `(font-lock-string-face ((,class (:foreground ,yellow))))
    `(font-lock-doc-face ((,class (:foreground ,white))))
@@ -251,9 +251,9 @@ For external tools, prefer `rustcity-export-palette'."
 
 ;;;###autoload
 (defun rustcity-export-palette (format &optional variant)
-  "Export palette for external tools.
-FORMAT: `json', `alist' or `hex-list'.
-VARIANT: `neon' or `downpour' (defaults from `frame-background-mode')."
+  "Export the palette for external tools.
+FORMAT is `json', `alist', or `hex-list'.
+VARIANT is `neon' or `downpour' (defaults from `frame-background-mode')."
   (let* ((palette (rustcity-palette variant))
          (ordered-keys '(black red green yellow blue magenta cyan white
                          brightblack brightred brightgreen brightyellow
