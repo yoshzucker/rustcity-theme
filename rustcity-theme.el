@@ -128,7 +128,7 @@ For external tools, prefer `rustcity-export-palette'."
    `(default ((,class (:foreground ,foreground :background ,background))))
    `(fixed-pitch ((,class (:family unspecified))))
    `(variable-pitch ((,class (:family unspecified))))
-   `(fringe ((,class (:background ,background-far))))
+   `(fringe ((,class (:background ,background))))
    `(border ((,class (:background ,background))))
    `(vertical-border ((,class (:foreground ,background-near))))
    `(internal-border ((,class (:background ,background))))
@@ -256,9 +256,9 @@ FORMAT is `json', `alist', or `hex-list'.
 VARIANT is `neon' or `downpour' (defaults from `frame-background-mode')."
   (let* ((palette (rustcity-palette variant))
          (ordered-keys '(black red green yellow blue magenta cyan white
-                         brightblack brightred brightgreen brightyellow
-                         brightblue brightmagenta brightcyan brightwhite
-                         background foreground)))
+                               brightblack brightred brightgreen brightyellow
+                               brightblue brightmagenta brightcyan brightwhite
+                               background foreground)))
     (pcase format
       ('alist
        palette)
