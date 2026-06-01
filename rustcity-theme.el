@@ -52,65 +52,102 @@
 ;;; Code:
 
 (require 'hsluv)
+(eval-when-compile (require 'cl-lib))
 
 (deftheme rustcity
   "A theme inspired by a rusted industrial cityscape—silent under neon rain, and hollow in a daylight downpour.")
 
 (defconst rustcity-downpour-hsl
-  '((background    . (260  20  87))     ; 6 base tones
-    (brightwhite   . (260  20  77))     ; 6 base tones
-    (white         . (260  20  67))     ; 6 base tones
-    (brightblack   . (260  20  57))     ; 6 base tones
-    (black         . (260  20  47))     ; 6 base tones
-    (foreground    . (260  20  37))     ; 6 base tones
-    (red           . (  0 100  57))     ; 8 neon hues
-    (yellow        . ( 70 100  57))     ; 8 neon hues
-    (green         . (110 100  57))     ; 8 neon hues
-    (cyan          . (200 100  57))     ; 8 neon hues
-    (blue          . (250 100  57))     ; 8 neon hues
-    (magenta       . (310 100  57))     ; 8 neon hues
-    (brightred     . ( 30 100  57))     ; 8 neon hues (orange)
-    (brightmagenta . (280 100  57))     ; 8 neon hues (violet)
-    (brightyellow  . (  0  55  57))     ; 4 diffused hues
-    (brightgreen   . (110  55  57))     ; 4 diffused hues
-    (brightcyan    . (250  55  57))     ; 4 diffused hues
-    (brightblue    . (280  55  57))))   ; 4 diffused hues
+  '((background    . (260  20  87))
+    (brightwhite   . (260  20  77))
+    (white         . (260  20  67))
+    (brightblack   . (260  20  57))
+    (black         . (260  20  47))
+    (foreground    . (260  20  37))
+    (red           . (  0 100  57))
+    (yellow        . ( 70 100  57))
+    (green         . (110 100  57))
+    (cyan          . (200 100  57))
+    (blue          . (250 100  57))
+    (magenta       . (310 100  57))
+    (brightred     . ( 30 100  57))
+    (brightmagenta . (280 100  57))
+    (brightyellow  . (  0  55  57))
+    (brightgreen   . (110  55  57))
+    (brightcyan    . (250  55  57))
+    (brightblue    . (280  55  57))))
+
+;; Color palette structure (central documentation of roles).
+;; Total 18 entries per variant:
+;; - 6 base tones: desaturated gray ramp at hue 260. Used for background,
+;;   foreground, and UI chrome (borders, fringes, mode-line inactive, etc.).
+;; - 8 neon hues: fully saturated accents (red/yellow/green/cyan/blue/magenta
+;;   plus brightred=orange and brightmagenta=violet). Primary semantic colors.
+;; - 4 diffused hues: lower saturation (55) variants of yellow/green/cyan/blue.
+;;   Used for softer highlights, tooltips, and secondary accents.
+;;
+;; The HSL values are the source of truth. Hex values are derived at load time
+;; via `rustcity--hex-palette` and exposed as `rustcity-downpour` / `rustcity-neon`.
 
 (defconst rustcity-neon-hsl
-  '((background    . (260  55  13))     ; 6 base tones
-    (black         . (260  55  23))     ; 6 base tones
-    (brightblack   . (260  55  33))     ; 6 base tones
-    (white         . (260  55  43))     ; 6 base tones
-    (brightwhite   . (260  55  53))     ; 6 base tones
-    (foreground    . (260  55  63))     ; 6 base tones
-    (red           . (  0 100  63))     ; 8 neon hues
-    (yellow        . ( 70 100  63))     ; 8 neon hues
-    (green         . (110 100  63))     ; 8 neon hues
-    (cyan          . (200 100  63))     ; 8 neon hues
-    (blue          . (250 100  63))     ; 8 neon hues
-    (magenta       . (310 100  63))     ; 8 neon hues
-    (brightred     . ( 30 100  63))     ; 8 neon hues (orange)
-    (brightmagenta . (280 100  63))     ; 8 neon hues (violet)
-    (brightyellow  . (  0  55  63))     ; 4 diffused hues
-    (brightgreen   . (110  55  63))     ; 4 diffused hues
-    (brightcyan    . (250  55  63))     ; 4 diffused hues
-    (brightblue    . (280  55  63))))   ; 4 diffused hues
+  '((background    . (260  55  13))
+    (black         . (260  55  23))
+    (brightblack   . (260  55  33))
+    (white         . (260  55  43))
+    (brightwhite   . (260  55  53))
+    (foreground    . (260  55  63))
+    (red           . (  0 100  63))
+    (yellow        . ( 70 100  63))
+    (green         . (110 100  63))
+    (cyan          . (200 100  63))
+    (blue          . (250 100  63))
+    (magenta       . (310 100  63))
+    (brightred     . ( 30 100  63))
+    (brightmagenta . (280 100  63))
+    (brightyellow  . (  0  55  63))
+    (brightgreen   . (110  55  63))
+    (brightcyan    . (250  55  63))
+    (brightblue    . (280  55  63))))
+
+(defun rustcity--hex-palette (hsl-palette)
+  "Convert HSLUV palette alist to hex colors.
+
+HSL-PALETTE is an alist of (NAME . (H S L)) entries.
+Returns an alist of (NAME . \"#rrggbb\") using `hsluv-hsluv-to-hex'."
+  (cl-loop for entry in hsl-palette
+           for name = (car entry)
+           for hsl = (cdr entry)
+           collect `(,name . ,(hsluv-hsluv-to-hex hsl))))
 
 (defconst rustcity-downpour
-  (cl-loop for (name . hsl) in rustcity-downpour-hsl
-           collect
-           `(,name . ,(hsluv-hsluv-to-hex hsl))))
+  (rustcity--hex-palette rustcity-downpour-hsl))
 
 (defconst rustcity-neon
-  (cl-loop for (name . hsl) in rustcity-neon-hsl
-           collect
-           `(,name . ,(hsluv-hsluv-to-hex hsl))))
+  (rustcity--hex-palette rustcity-neon-hsl))
+
+(defun rustcity--palette (&optional variant)
+  "Return hex color alist for VARIANT or the current `frame-background-mode'.
+
+VARIANT is `neon' (dark) or `downpour' (light). When omitted, the variant
+is chosen based on `frame-background-mode' (light -> downpour, otherwise neon).
+
+This is the single source for variant selection used by `rustcity-colors'
+and `rustcity-export-palette'."
+  (let ((v (or variant
+               (if (eq frame-background-mode 'light) 'downpour 'neon))))
+    (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
 
 (defun rustcity-colors ()
-  "Return color mapping: 16 ANSI colors + foreground/background."
-  (if (eq frame-background-mode 'light)
-      rustcity-downpour
-    rustcity-neon))
+  "Return color mapping: 16 ANSI colors + foreground/background.
+
+Used by the author's personal dotfiles (my-ui-face.el) to configure
+additional faces for dired-rainbow, smartrep, custom org keywords,
+wdired, calendar, and mode-line overrides.
+
+The returned alist always contains all 18 entries (the 6 base tones,
+8 neon hues, and 4 diffused hues) so that callers can reliably
+\\='(alist-get \\='black ...)\\=' etc. regardless of variant."
+  (rustcity--palette))
 
 (let* ((class '((class color) (min-colors 89)))
        (colors (rustcity-colors))
@@ -122,16 +159,12 @@
        (blue          (alist-get 'blue          colors))
        (magenta       (alist-get 'magenta        colors))
        (cyan          (alist-get 'cyan           colors))
-       (black         (alist-get 'black          colors))
        (white         (alist-get 'white          colors))
-       (brightblack   (alist-get 'brightblack   colors))
        (brightred     (alist-get 'brightred     colors))
        (brightgreen   (alist-get 'brightgreen   colors))
        (brightyellow  (alist-get 'brightyellow  colors))
-       (brightblue    (alist-get 'brightblue    colors))
        (brightmagenta (alist-get 'brightmagenta colors))
        (brightcyan    (alist-get 'brightcyan    colors))
-       (brightwhite   (alist-get 'brightwhite   colors))
 
        (lightp (eq frame-background-mode 'light))
        (background-near (alist-get (if lightp 'brightwhite 'black) colors))
@@ -288,13 +321,7 @@ Example:
 This function is intended to help generate configuration for
 Alacritty, kitty, WezTerm, ghostty, dircolors, or similar tools
 while keeping the canonical HSLuv values in one place."
-  (let* ((variant (or variant
-                      (if (eq frame-background-mode 'light)
-                          'downpour
-                        'neon)))
-         (palette (if (eq variant 'downpour)
-                      rustcity-downpour
-                    rustcity-neon))
+  (let* ((palette (rustcity--palette variant))
          ;; Conventional 16-color order + fg/bg for terminal tools
          (ordered-keys '(black red green yellow blue magenta cyan white
                          brightblack brightred brightgreen brightyellow
