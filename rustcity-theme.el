@@ -10,54 +10,22 @@
 
 ;;; Commentary:
 
-;; rustcity is a dual light/dark theme inspired by the forgotten edges of an
-;; industrial port city.
-;;
-;; - `neon' (dark): The heavy, rain-slicked night of an industrial district.
-;;   Neon signs glow against deep shadows, but the streets are empty. The
-;;   palette evokes the quiet codependence between the remaining neon-lit
-;;   shops and the workers who no longer fill them after dark.
-;;
-;; - `downpour' (light): The pale, washed-out morning after a torrential rain.
-;;   Reflections of last night's neon shimmer in puddles and gutters. No one
-;;   is on the street yet; only the memory of the previous night lingers in
-;;   the water and the rusted colors.
-;;
-;; The theme is built on perceptual HSLuv colors for consistency across
-;; lightness and hue. It prioritizes readability while preserving a strong
-;; emotional tone.
+;; Dual light/dark theme using HSLuv colors.
 ;;
 ;; Usage (standalone):
-;;
 ;;   (setq frame-background-mode 'dark)   ; or 'light
 ;;   (load-theme 'rustcity t)
 ;;
 ;; Or with straight/use-package:
-;;
 ;;   (use-package rustcity-theme
 ;;     :straight (:host github :repo "yoshzucker/rustcity-theme")
 ;;     :config
 ;;     (setq frame-background-mode 'dark)
 ;;     (load-theme 'rustcity t))
 ;;
-;; The color palette is also available programmatically for external tools
-;; (terminal emulators, dircolors, etc.):
-;;
-;;   (rustcity-export-palette 'json 'neon)
-;;
-;; This returns a JSON string with the 16 ANSI colors + foreground/background
-;; that can be consumed by scripts generating Alacritty, kitty, WezTerm,
-;; ghostty, or dircolors configurations.
-;;
-;; For programmatic use from Emacs Lisp (e.g. to define additional faces
-;; in your own configuration), use the simpler `rustcity-palette' instead:
-;;
-;;   (rustcity-palette)        ; current variant from frame-background-mode
-;;   (rustcity-palette 'neon)
-;;
-;; This returns the raw alist ((background . "#...") (red . "#...") ... 18 entries).
-;; The same alist is also available as the constants `rustcity-neon' and
-;; `rustcity-downpour'.
+;; Programmatic palette access:
+;;   (rustcity-palette)        ; current or (rustcity-palette 'neon)
+;;   (rustcity-export-palette 'json 'neon)  ; for external tools
 
 ;;; Code:
 
@@ -87,18 +55,6 @@
     (brightcyan    . (250  55  57))
     (brightblue    . (280  55  57))))
 
-;; Color palette structure (central documentation of roles).
-;; Total 18 entries per variant:
-;; - 6 base tones: desaturated gray ramp at hue 260. Used for background,
-;;   foreground, and UI chrome (borders, fringes, mode-line inactive, etc.).
-;; - 8 neon hues: fully saturated accents (red/yellow/green/cyan/blue/magenta
-;;   plus brightred=orange and brightmagenta=violet). Primary semantic colors.
-;; - 4 diffused hues: lower saturation (55) variants of yellow/green/cyan/blue.
-;;   Used for softer highlights, tooltips, and secondary accents.
-;;
-;; The HSL values are the source of truth. Hex values are derived at load time
-;; via `rustcity--hex-palette` and exposed as `rustcity-downpour` / `rustcity-neon`.
-
 (defconst rustcity-neon-hsl
   '((background    . (260  55  13))
     (black         . (260  55  23))
@@ -120,10 +76,7 @@
     (brightblue    . (280  55  63))))
 
 (defun rustcity--hex-palette (hsl-palette)
-  "Convert HSLUV palette alist to hex colors.
-
-HSL-PALETTE is an alist of (NAME . (H S L)) entries.
-Returns an alist of (NAME . \"#rrggbb\") using `hsluv-hsluv-to-hex'."
+  "Convert HSL alist to hex alist using hsluv-hsluv-to-hex."
   (cl-loop for entry in hsl-palette
            for name = (car entry)
            for hsl = (cdr entry)
@@ -137,20 +90,9 @@ Returns an alist of (NAME . \"#rrggbb\") using `hsluv-hsluv-to-hex'."
 
 ;;;###autoload
 (defun rustcity-palette (&optional variant)
-  "Return the rustcity color palette as an alist ((NAME . \"#hex\") ...).
-
-VARIANT is `neon' (dark) or `downpour' (light).
-If omitted, the variant is chosen from the current value of
-`frame-background-mode' (light -> downpour, otherwise neon).
-
-This is the primary function for programmatic access to the palette
-from inside Emacs (e.g. for custom faces in your configuration).
-For generating configuration for external tools (Alacritty, dircolors,
-etc.), prefer `rustcity-export-palette'.
-
-The returned alist always contains the full 18 entries:
-6 base tones (desaturated gray ramp), 8 neon hues (saturated accents),
-and 4 diffused hues (lower-saturation variants)."
+  "Return hex alist for VARIANT or current `frame-background-mode'.
+VARIANT is `neon' or `downpour' (default from frame-background-mode).
+For external tools, prefer `rustcity-export-palette'."
   (let ((v (or variant
                (if (eq frame-background-mode 'light) 'downpour 'neon))))
     (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
@@ -309,26 +251,10 @@ and 4 diffused hues (lower-saturation variants)."
 
 ;;;###autoload
 (defun rustcity-export-palette (format &optional variant)
-  "Export the rustcity color palette for use outside Emacs (e.g. terminal themes).
-
-FORMAT is one of the following symbols:
-  `json'      - pretty-printed JSON object
-  `alist'     - Emacs alist ((color . \"#hex\") ...)
-  `hex-list'  - plain list of hex strings in a conventional order
-
-VARIANT is `neon' (dark) or `downpour' (light).
-If omitted, the variant is chosen from the current value of
-`frame-background-mode' (dark → neon, light → downpour).
-
-Example:
-  (rustcity-export-palette \\='json \\='neon)
-  ;; => JSON string suitable for piping to a generator script
-
-This function is intended to help generate configuration for
-Alacritty, kitty, WezTerm, ghostty, dircolors, or similar tools
-while keeping the canonical HSLuv values in one place."
+  "Export palette for external tools.
+FORMAT: `json', `alist' or `hex-list'.
+VARIANT: `neon' or `downpour' (defaults from `frame-background-mode')."
   (let* ((palette (rustcity-palette variant))
-         ;; Conventional 16-color order + fg/bg for terminal tools
          (ordered-keys '(black red green yellow blue magenta cyan white
                          brightblack brightred brightgreen brightyellow
                          brightblue brightmagenta brightcyan brightwhite

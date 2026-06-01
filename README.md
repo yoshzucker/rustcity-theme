@@ -38,23 +38,27 @@ The theme reads `frame-background-mode` at load time. To change between `neon` a
 (load-theme 'rustcity t)
 ```
 
-## Using the palette outside Emacs
+## Using the palette
 
-The canonical color definitions live in HSLuv space. After loading the theme (or the package), you can export the 16-color ANSI + foreground/background palette for use in terminal emulators, dircolors, shell prompts, etc.
+After loading the package (or the theme), the palette is available in two ways:
 
-```elisp
-;; Pretty-printed JSON (easy to consume from scripts)
-(rustcity-export-palette 'json 'neon)
+- Inside Emacs (e.g. for additional custom faces in your config):
+  ```elisp
+  (rustcity-palette)        ; current variant based on frame-background-mode
+  (rustcity-palette 'neon)
+  ```
+  Returns the raw alist of 18 entries: `((background . "#...") (red . "#...") ...)`.
 
-;; Emacs alist
-(rustcity-export-palette 'alist 'downpour)
+- For external tools (Alacritty, kitty, WezTerm, ghostty, dircolors, etc.):
+  ```elisp
+  (rustcity-export-palette 'json 'neon)
+  (rustcity-export-palette 'alist 'downpour)
+  (rustcity-export-palette 'hex-list)
+  ```
 
-;; Ordered hex list (black, red, ..., brightwhite, background, foreground)
-(rustcity-export-palette 'hex-list)
-```
+The canonical definitions are the HSLuv constants (`rustcity-*-hsl`). Hex values and the alist accessors are derived from them.
 
-Example output (truncated):
-
+Example JSON (truncated):
 ```json
 {
   "black": "#2f2a3a",
@@ -63,8 +67,6 @@ Example output (truncated):
   "foreground": "#a89fb0"
 }
 ```
-
-This makes it straightforward to generate consistent themes for Alacritty, kitty, WezTerm, ghostty, or dircolors from the same source of truth.
 
 ## Palette overview
 
@@ -75,7 +77,7 @@ This makes it straightforward to generate consistent themes for Alacritty, kitty
 | accent neon   | saturated reds, magentas, cyans | diffused, rain-muted versions |
 | secondary     | muted industrial tones       | rusted, overcast hues        |
 
-Exact values are generated from HSLuv at load time and exposed via the constants `rustcity-neon-hsl` / `rustcity-downpour-hsl` and their hex counterparts.
+Exact values are generated from HSLuv at load time. They are exposed via the HSL constants, the derived hex constants (`rustcity-neon`, `rustcity-downpour`), and the accessors `rustcity-palette` / `rustcity-export-palette`.
 
 ## License
 
