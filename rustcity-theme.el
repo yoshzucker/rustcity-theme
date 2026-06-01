@@ -48,6 +48,16 @@
 ;; This returns a JSON string with the 16 ANSI colors + foreground/background
 ;; that can be consumed by scripts generating Alacritty, kitty, WezTerm,
 ;; ghostty, or dircolors configurations.
+;;
+;; For programmatic use from Emacs Lisp (e.g. to define additional faces
+;; in your own configuration), use the simpler `rustcity-palette' instead:
+;;
+;;   (rustcity-palette)        ; current variant from frame-background-mode
+;;   (rustcity-palette 'neon)
+;;
+;; This returns the raw alist ((background . "#...") (red . "#...") ... 18 entries).
+;; The same alist is also available as the constants `rustcity-neon' and
+;; `rustcity-downpour'.
 
 ;;; Code:
 
@@ -125,32 +135,28 @@ Returns an alist of (NAME . \"#rrggbb\") using `hsluv-hsluv-to-hex'."
 (defconst rustcity-neon
   (rustcity--hex-palette rustcity-neon-hsl))
 
-(defun rustcity--palette (&optional variant)
-  "Return hex color alist for VARIANT or the current `frame-background-mode'.
+;;;###autoload
+(defun rustcity-palette (&optional variant)
+  "Return the rustcity color palette as an alist ((NAME . \"#hex\") ...).
 
-VARIANT is `neon' (dark) or `downpour' (light). When omitted, the variant
-is chosen based on `frame-background-mode' (light -> downpour, otherwise neon).
+VARIANT is `neon' (dark) or `downpour' (light).
+If omitted, the variant is chosen from the current value of
+`frame-background-mode' (light -> downpour, otherwise neon).
 
-This is the single source for variant selection used by `rustcity-colors'
-and `rustcity-export-palette'."
+This is the primary function for programmatic access to the palette
+from inside Emacs (e.g. for custom faces in your configuration).
+For generating configuration for external tools (Alacritty, dircolors,
+etc.), prefer `rustcity-export-palette'.
+
+The returned alist always contains the full 18 entries:
+6 base tones (desaturated gray ramp), 8 neon hues (saturated accents),
+and 4 diffused hues (lower-saturation variants)."
   (let ((v (or variant
                (if (eq frame-background-mode 'light) 'downpour 'neon))))
     (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
 
-(defun rustcity-colors ()
-  "Return color mapping: 16 ANSI colors + foreground/background.
-
-Used by the author's personal dotfiles (my-ui-face.el) to configure
-additional faces for dired-rainbow, smartrep, custom org keywords,
-wdired, calendar, and mode-line overrides.
-
-The returned alist always contains all 18 entries (the 6 base tones,
-8 neon hues, and 4 diffused hues) so that callers can reliably
-\\='(alist-get \\='black ...)\\=' etc. regardless of variant."
-  (rustcity--palette))
-
 (let* ((class '((class color) (min-colors 89)))
-       (colors (rustcity-colors))
+       (colors (rustcity-palette))
        (background    (alist-get 'background    colors))
        (foreground    (alist-get 'foreground    colors))
        (red           (alist-get 'red           colors))
@@ -321,7 +327,7 @@ Example:
 This function is intended to help generate configuration for
 Alacritty, kitty, WezTerm, ghostty, dircolors, or similar tools
 while keeping the canonical HSLuv values in one place."
-  (let* ((palette (rustcity--palette variant))
+  (let* ((palette (rustcity-palette variant))
          ;; Conventional 16-color order + fg/bg for terminal tools
          (ordered-keys '(black red green yellow blue magenta cyan white
                          brightblack brightred brightgreen brightyellow
