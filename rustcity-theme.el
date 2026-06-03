@@ -24,8 +24,8 @@
 ;;     (load-theme 'rustcity t))
 ;;
 ;; Programmatic palette access:
-;;   (rustcity-palette)        ; current or (rustcity-palette 'neon)
-;;   (rustcity-export-palette 'json 'neon)  ; for external tools
+;;   (rustcity-palette)        ; internal semantic keys (mono0-7 + 8 hues)
+;;   (rustcity-export-palette 'json 'neon)  ; ANSI/terminal names for external tools
 
 ;;; Code:
 
@@ -91,7 +91,15 @@
 (defun rustcity-palette (&optional variant)
   "Return hex color alist for VARIANT or current `frame-background-mode'.
 VARIANT is `neon' or `downpour' (defaults from `frame-background-mode').
-For external tools, prefer `rustcity-export-palette'."
+
+The alist uses the theme's internal semantic palette keys:
+  mono0..mono7  (perceptual gray ramp; mono0 is background, mono7 foreground
+                 for the chosen variant)
+  red orange yellow green cyan blue purple magenta  (accent hues)
+
+For external tools / terminal emulators prefer `rustcity-export-palette',
+which maps to conventional ANSI/terminal color names (background, black,
+brightblack, ...)."
   (let ((v (or variant
                (if (eq frame-background-mode 'light) 'downpour 'neon))))
     (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
@@ -118,33 +126,38 @@ For external tools, prefer `rustcity-export-palette'."
 
   (custom-theme-set-faces
    'rustcity
-   ;; --- Core ---
+   ;; --- Core primitives ---
    `(default ((,class (:foreground ,mono7 :background ,mono0))))
    `(fixed-pitch ((,class (:family unspecified))))
    `(variable-pitch ((,class (:family unspecified))))
+   `(cursor ((,class (:background ,primary))))
    `(fringe ((,class (:background ,mono0))))
    `(border ((,class (:background ,mono0))))
-   `(vertical-border ((,class (:foreground ,mono1))))
    `(internal-border ((,class (:background ,mono0))))
+   `(vertical-border ((,class (:foreground ,mono1))))
+   `(region ((,class (:background ,mono1 :extend t))))
+   `(highlight ((,class (:background ,mono1))))
+   `(shadow ((,class (:foreground ,mono5))))
+   `(match ((,class (:foreground ,mono0 :background ,green))))
+   `(show-paren-match ((,class (:background ,mono1 :weight bold))))
+   `(link ((,class (:foreground ,green :underline t))))
+   `(link-visited ((,class (:foreground ,purple :underline t))))
+   `(error ((,class (:foreground ,red))))
+   `(warning ((,class (:foreground ,yellow))))
+   `(success ((,class (:foreground ,green))))
+   `(minibuffer-prompt ((,class (:foreground ,primary))))
+   `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
+
+   ;; --- Modeline, header-line, tab-bar (UI chrome) ---
    `(mode-line ((,class (:foreground ,mono0 :background ,primary))))
    `(mode-line-inactive ((,class (:foreground ,primary :background ,mono1))))
    `(mode-line-buffer-id ((,class (:weight unspecified))))
    `(header-line ((,class (:foreground ,primary :background ,mono2 :weight unspecified))))
-   `(minibuffer-prompt ((,class (:foreground ,primary))))
-   `(cursor ((,class (:background ,primary))))
-   `(region ((,class (:background ,mono1 :extend t))))
-   `(highlight ((,class (:background ,mono1))))
-   `(show-paren-match ((,class (:background ,mono1 :weight bold))))
-   `(link ((,class (:foreground ,green :underline t))))
-   `(link-visited ((,class (:foreground ,purple :underline t))))
-   `(shadow ((,class (:foreground ,mono5))))
-   `(match ((,class (:foreground ,mono0 :background ,green))))
-   `(warning ((,class (:foreground ,yellow))))
-   `(error ((,class (:foreground ,red))))
-   `(success ((,class (:foreground ,green))))
-   `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
+   `(tab-bar ((,class (:foreground ,mono7 :background ,mono0))))
+   `(tab-bar-tab ((,class (:foreground ,mono0 :background ,primary :box unspecified))))
+   `(tab-bar-tab-inactive ((,class (:foreground ,primary :background ,mono1))))
 
-   ;; --- Font-lock ---
+   ;; --- Font-lock (syntax primitives; bases for inherits) ---
    `(font-lock-comment-face ((,class (:foreground ,mono5 :slant italic))))
    `(font-lock-string-face ((,class (:foreground ,yellow))))
    `(font-lock-doc-face ((,class (:foreground ,mono5))))
@@ -156,12 +169,15 @@ For external tools, prefer `rustcity-export-palette'."
    `(font-lock-constant-face ((,class (:foreground ,orange))))
    `(font-lock-warning-face ((,class (:foreground ,red))))
 
-   ;; --- Tab bar ---
-   `(tab-bar ((,class (:foreground ,mono7 :background ,mono0))))
-   `(tab-bar-tab ((,class (:foreground ,mono0 :background ,primary :box unspecified))))
-   `(tab-bar-tab-inactive ((,class (:foreground ,primary :background ,mono1))))
+   ;; --- Search, jump, isearch (interactive highlights) ---
+   `(isearch ((,class (:foreground ,mono0 :background ,orange))))
+   `(lazy-highlight ((,class (:foreground ,mono0 :background ,mono3))))
+   `(avy-lead-face ((,class (:foreground ,mono0 :background ,blue))))
+   `(avy-lead-face-0 ((,class (:foreground ,mono0 :background ,orange))))
+   `(avy-lead-face-1 ((,class (:foreground ,mono0 :background ,red))))
+   `(avy-lead-face-2 ((,class (:foreground ,mono0 :background ,magenta))))
 
-   ;; --- Completion & search (modern) ---
+   ;; --- Completion & narrowing (modern UIs) ---
    `(vertico-current ((,class (:background ,mono1))))
    `(orderless-match-face-0 ((,class (:weight unspecified :foreground ,orange))))
    `(orderless-match-face-1 ((,class (:weight unspecified :foreground ,magenta))))
@@ -173,26 +189,23 @@ For external tools, prefer `rustcity-export-palette'."
    `(corfu-current ((,class (:foreground ,primary :background ,mono1))))
    `(corfu-bar ((,class (:background ,primary))))
 
-   ;; --- Search / jump ---
-   `(isearch ((,class (:foreground ,mono0 :background ,orange))))
-   `(lazy-highlight ((,class (:foreground ,mono0 :background ,mono3))))
-   `(avy-lead-face ((,class (:foreground ,mono0 :background ,blue))))
-   `(avy-lead-face-0 ((,class (:foreground ,mono0 :background ,orange))))
-   `(avy-lead-face-1 ((,class (:foreground ,mono0 :background ,red))))
-   `(avy-lead-face-2 ((,class (:foreground ,mono0 :background ,magenta))))
-
-   ;; --- Evil / misc ---
-   `(evil-snipe-first-match-face ((,class (:background ,mono2))))
-   `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
-
-   ;; --- Major packages ---
-   `(magit-section-heading ((,class (:foreground ,yellow :background ,mono0))))
-   `(eglot-mode-line ((,class (:weight unspecified))))
+   ;; --- Navigation & project (dired, magit, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
+   `(magit-section-heading ((,class (:foreground ,yellow :background ,mono0))))
    `(treemacs-root-face ((,class (:height unspecified))))
    `(bookmark-face ((,class (:distant-foreground ,blue :background unspecified))))
+   `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
 
-   ;; --- Outline / org (core + rich) ---
+   ;; --- Dev tools (eglot, compilation, ein) ---
+   `(eglot-mode-line ((,class (:weight unspecified))))
+   `(compilation-info ((,class (:weight unspecified))))
+   `(compilation-mode-line-fail ((,class (:weight unspecified))))
+   `(compilation-mode-line-exit ((,class (:weight unspecified))))
+
+   ;; --- Evil / vim-emulation ---
+   `(evil-snipe-first-match-face ((,class (:background ,mono2))))
+
+   ;; --- Outlines (inherit font-lock-*) ---
    `(outline-1 ((,class (:inherit font-lock-type-face))))
    `(outline-2 ((,class (:inherit font-lock-variable-name-face))))
    `(outline-3 ((,class (:inherit font-lock-constant-face))))
@@ -202,6 +215,7 @@ For external tools, prefer `rustcity-export-palette'."
    `(outline-7 ((,class (:inherit font-lock-warning-face))))
    `(outline-8 ((,class (:inherit font-lock-keyword-face))))
 
+   ;; --- Org mode + extensions (rich derived faces) ---
    `(org-headline-done ((,class (:foreground unspecified))))
    `(org-agenda-dimmed-todo-face ((,class (:inherit font-lock-comment-face))))
    `(org-todo ((,class (:inverse-video t :foreground ,red :background ,mono0))))
@@ -232,16 +246,30 @@ For external tools, prefer `rustcity-export-palette'."
    `(deft-header-face ((,class (:inherit font-lock-builtin-face))))
    `(deft-title-face ((,class (:inherit font-lock-constant-face))))
 
-   ;; --- Calendar / compile / ein / eww ---
+   ;; --- Calendar / eww (other apps) ---
    `(calendar-today ((,class (:inherit font-lock-warning-face))))
    `(calendar-weekend-header ((,class (:inherit font-lock-type-face))))
-   `(compilation-info ((,class (:weight unspecified))))
-   `(compilation-mode-line-fail ((,class (:weight unspecified))))
-   `(compilation-mode-line-exit ((,class (:weight unspecified))))
-   `(ein:cell-input-area ((,class (:background ,mono1))))
-   `(ein:cell-input-prompt ((,class (:foreground ,mono0 :background ,primary))))
-   `(ein:cell-output-prompt ((,class (:foreground ,mono0 :background ,secondary))))
    `(eww-valid-certificate ((,class (:weight unspecified :foreground ,green))))))
+
+(defconst rustcity--export-name-map
+  '((mono0   . background)
+    (mono0   . brightcyan)
+    (mono1   . black)
+    (mono2   . brightblack)
+    (mono3   . brightblue)
+    (mono4   . brightgreen)
+    (mono5   . white)
+    (mono6   . brightyellow)
+    (mono7   . foreground)
+    (mono7   . brightwhite)
+    (red     . red)
+    (orange  . brightred)
+    (yellow  . yellow)
+    (green   . green)
+    (cyan    . cyan)
+    (blue    . blue)
+    (purple  . brightmagenta)
+    (magenta . magenta)))
 
 ;;;###autoload
 (defun rustcity-export-palette (format &optional variant)
@@ -249,22 +277,31 @@ For external tools, prefer `rustcity-export-palette'."
 FORMAT is `json', `alist', or `hex-list'.
 VARIANT is `neon' or `downpour' (defaults from `frame-background-mode')."
   (let* ((palette (rustcity-palette variant))
-         (ordered-keys '(mono1 red green yellow blue magenta cyan mono5
-                               mono2 orange 
-                               mono4 purple mono3 mono6
-                               mono0 mono7)))
+         ;; ANSI names in the 0-15 slot order for hex-list.
+         (ordered-keys '(black red green yellow blue magenta cyan white
+                               brightblack brightred brightgreen brightmagenta
+                               brightblue brightyellow brightcyan brightwhite)))
     (pcase format
       ('alist
-       palette)
+       (mapcar (lambda (pair)
+                 (let* ((internal (car pair))
+                        (ansi (cdr pair)))
+                   (cons ansi (alist-get internal palette))))
+               rustcity--export-name-map))
       ('hex-list
-       (mapcar (lambda (k) (alist-get k palette)) ordered-keys))
+       (mapcar (lambda (ansi)
+                 (let ((internal (car (rassoc ansi rustcity--export-name-map))))
+                   (alist-get internal palette)))
+               ordered-keys))
       ('json
        (let ((json-pairs
               (mapconcat
-               (lambda (k)
-                 (let ((v (alist-get k palette)))
-                   (format "  %S: %S" (symbol-name k) v)))
-               ordered-keys
+               (lambda (pair)
+                 (let* ((internal (car pair))
+                        (ansi (cdr pair))
+                        (v (alist-get internal palette)))
+                   (format "  %S: %S" (symbol-name ansi) v)))
+               rustcity--export-name-map
                ",\n")))
          (concat "{\n" json-pairs "\n}")))
       (_
