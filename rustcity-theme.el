@@ -105,24 +105,31 @@ brightblack, ...)."
     (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
 
 (let* ((class '((class color) (min-colors 89)))
-       (colors    (rustcity-palette))
-       (mono0     (alist-get 'mono0   colors))
-       (mono1     (alist-get 'mono1   colors))
-       (mono2     (alist-get 'mono2   colors))
-       (mono3     (alist-get 'mono3   colors))
-       (mono6     (alist-get 'mono6   colors))
-       (mono5     (alist-get 'mono5   colors))
-       (mono7     (alist-get 'mono7   colors))
-       (red       (alist-get 'red     colors))
-       (orange    (alist-get 'orange  colors))
-       (yellow    (alist-get 'yellow  colors))
-       (green     (alist-get 'green   colors))
-       (cyan      (alist-get 'cyan    colors))
-       (blue      (alist-get 'blue    colors))
-       (purple    (alist-get 'purple  colors))
-       (magenta   (alist-get 'magenta colors))
-       (primary   (alist-get 'purple  colors))
-       (secondary (alist-get 'blue    colors)))
+       (colors (rustcity-palette))
+       (mono0  (alist-get 'mono0 colors))
+       (mono1  (alist-get 'mono1 colors))
+       (mono2  (alist-get 'mono2 colors))
+       (mono3  (alist-get 'mono3 colors))
+       (mono4  (alist-get 'mono4 colors))
+       (mono5  (alist-get 'mono5 colors))
+       (mono6  (alist-get 'mono6 colors))
+       (mono7  (alist-get 'mono7 colors))
+       (red    (alist-get 'red colors))
+       (orange (alist-get 'orange colors))
+       (yellow (alist-get 'yellow colors))
+       (green  (alist-get 'green colors))
+       (cyan   (alist-get 'cyan colors))
+       (blue   (alist-get 'blue colors))
+       (purple (alist-get 'purple colors))
+       (magenta (alist-get 'magenta colors))
+       (primary (alist-get 'purple colors))
+       (secondary (alist-get 'blue colors)))
+
+  ;; Mono ramp roles (perceptual steps from HSLuv; follow systematic gray
+  ;; levels for visual hierarchy, e.g. adjacent steps for related elements).
+  ;; 0: main bg / strong pop bg; 1: subtle bg (region etc.); 2: alt subtle;
+  ;; 3: medium subtle; 4: faint; 5: comments/secondary; 6: prominent secondary;
+  ;; 7: main fg.
 
   (custom-theme-set-faces
    'rustcity
@@ -134,10 +141,10 @@ brightblack, ...)."
    `(fringe ((,class (:background ,mono0))))
    `(border ((,class (:background ,mono0))))
    `(internal-border ((,class (:background ,mono0))))
-   `(vertical-border ((,class (:foreground ,mono1))))
+   `(vertical-border ((,class (:foreground ,mono2))))
    `(region ((,class (:background ,mono1 :extend t))))
    `(highlight ((,class (:background ,mono1))))
-   `(shadow ((,class (:foreground ,mono5))))
+   `(shadow ((,class (:foreground ,mono4))))
    `(match ((,class (:foreground ,mono0 :background ,green))))
    `(show-paren-match ((,class (:background ,mono1 :weight bold))))
    `(link ((,class (:foreground ,green :underline t))))
@@ -152,7 +159,7 @@ brightblack, ...)."
    `(mode-line ((,class (:foreground ,mono0 :background ,primary))))
    `(mode-line-inactive ((,class (:foreground ,primary :background ,mono1))))
    `(mode-line-buffer-id ((,class (:weight unspecified))))
-   `(header-line ((,class (:foreground ,primary :background ,mono2 :weight unspecified))))
+   `(header-line ((,class (:foreground ,primary :background ,mono3 :weight unspecified))))
    `(tab-bar ((,class (:foreground ,mono7 :background ,mono0))))
    `(tab-bar-tab ((,class (:foreground ,mono0 :background ,primary :box unspecified))))
    `(tab-bar-tab-inactive ((,class (:foreground ,primary :background ,mono1))))
@@ -160,7 +167,7 @@ brightblack, ...)."
    ;; --- Font-lock (syntax primitives; bases for inherits) ---
    `(font-lock-comment-face ((,class (:foreground ,mono5 :slant italic))))
    `(font-lock-string-face ((,class (:foreground ,yellow))))
-   `(font-lock-doc-face ((,class (:foreground ,mono5))))
+   `(font-lock-doc-face ((,class (:foreground ,mono4))))
    `(font-lock-keyword-face ((,class (:foreground ,purple))))
    `(font-lock-builtin-face ((,class (:foreground ,green))))
    `(font-lock-variable-name-face ((,class (:foreground ,blue))))
@@ -171,7 +178,7 @@ brightblack, ...)."
 
    ;; --- Search, jump, isearch (interactive highlights) ---
    `(isearch ((,class (:foreground ,mono0 :background ,orange))))
-   `(lazy-highlight ((,class (:foreground ,mono0 :background ,mono3))))
+   `(lazy-highlight ((,class (:foreground ,mono0 :background ,mono2))))
    `(avy-lead-face ((,class (:foreground ,mono0 :background ,blue))))
    `(avy-lead-face-0 ((,class (:foreground ,mono0 :background ,orange))))
    `(avy-lead-face-1 ((,class (:foreground ,mono0 :background ,red))))
@@ -185,13 +192,13 @@ brightblack, ...)."
    `(orderless-match-face-3 ((,class (:weight unspecified :foreground ,red))))
    `(consult-buffer ((,class (:foreground ,mono6))))
    `(consult-file ((,class (:foreground ,mono5))))
-   `(corfu-default ((,class (:background ,mono0))))
+   `(corfu-default ((,class (:background ,mono1))))
    `(corfu-current ((,class (:foreground ,primary :background ,mono1))))
    `(corfu-bar ((,class (:background ,primary))))
 
    ;; --- Navigation & project (dired, magit, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
-   `(magit-section-heading ((,class (:foreground ,yellow :background ,mono0))))
+   `(magit-section-heading ((,class (:foreground ,yellow :background ,mono1))))
    `(treemacs-root-face ((,class (:height unspecified))))
    `(bookmark-face ((,class (:distant-foreground ,blue :background unspecified))))
    `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
@@ -203,7 +210,7 @@ brightblack, ...)."
    `(compilation-mode-line-exit ((,class (:weight unspecified))))
 
    ;; --- Evil / vim-emulation ---
-   `(evil-snipe-first-match-face ((,class (:background ,mono2))))
+   `(evil-snipe-first-match-face ((,class (:background ,mono3))))
 
    ;; --- Outlines (inherit font-lock-*) ---
    `(outline-1 ((,class (:inherit font-lock-type-face))))
@@ -221,7 +228,7 @@ brightblack, ...)."
    `(org-todo ((,class (:inverse-video t :foreground ,red :background ,mono0))))
    `(org-done ((,class (:inverse-video t :foreground ,green :background ,mono0))))
    `(org-document-title ((,class (:inherit font-lock-constant-face))))
-   `(org-column ((,class (:background ,mono1))))
+   `(org-column ((,class (:background ,mono2))))
    `(org-column-title ((,class (:inherit org-column))))
    `(org-table ((,class (:foreground ,cyan))))
    `(org-tag ((,class (:weight unspecified))))
