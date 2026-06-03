@@ -51,12 +51,10 @@
     (cyan    . (200 100  57))
     (blue    . (250 100  57))
     (purple  . (280 100  57))
-    (magenta . (310 100  57))
-    ))
+    (magenta . (310 100  57))))
 
 (defconst rustcity-neon-hsl
-  '(
-    (mono0   . (260  55  14))
+  '((mono0   . (260  55  14))
     (mono1   . (260  55  21))
     (mono2   . (260  55  28))
     (mono3   . (260  55  35))
@@ -71,8 +69,7 @@
     (cyan    . (200 100  63))
     (blue    . (250 100  63))
     (purple  . (280 100  63))
-    (magenta . (310 100  63))
-    ))
+    (magenta . (310 100  63))))
 
 (defun rustcity--hex-palette (hsl-palette)
   "Convert HSL alist to hex alist using `hsluv-hsluv-to-hex'."
