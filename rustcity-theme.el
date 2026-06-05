@@ -26,6 +26,15 @@
 ;; Programmatic palette access:
 ;;   (rustcity-palette)        ; internal semantic keys (mono0-7 + 8 hues)
 ;;   (rustcity-export-palette 'json 'neon)  ; ANSI/terminal names for external tools
+;;
+;; Display compensation:
+;;   (setq rustcity-hsl-correction '(0.0 0.0 -1.5))  ; e.g. darken L a bit
+;;   (rustcity-apply-hsl-correction)                 ; then reloads theme if active
+;; See the defcustom docstring for details and caveats (linear approx.).
+;;
+;; Magit and Marginalia faces are included and follow the theme's mono ramp
+;; + limited (but higher-pop) accents (with heavy use of :inherit) so that
+;; highlights/headers harmonize with the neon aesthetic.
 
 ;;; Code:
 
@@ -71,18 +80,69 @@
     (purple  . (280 100  63))
     (magenta . (310 100  63))))
 
+(defcustom rustcity-hsl-correction '(0.0 0.0 0.0)
+  "HSLuv deltas (h s l) added to every base color before hex conversion.
+
+Intended to compensate for display characteristic differences (e.g.
+perceived darkness of the neon variant mono0 background on some
+setups vs. others).  The correction is applied uniformly and
+linearly in HSLuv space to all 16 palette entries (mono0-7 and the
+8 hues) for both neon and downpour variants.
+
+Because the relationship between HSLuv values and actual display
+response may not be perfectly linear, a single set of deltas is a
+first-order approximation.  Small L adjustments are often most
+effective for background lightness; large corrections can affect
+ramp spacing or accent distinguishability.  Always verify visually
+after changing, and prefer the smallest effective values.
+
+The canonical design values remain in `rustcity-neon-hsl' and
+`rustcity-downpour-hsl'; this option only affects derived hex palettes.
+
+Set the value before loading the theme, or call
+`rustcity-apply-hsl-correction' afterwards (and reload the theme if
+necessary)."
+  :type '(list float float float)
+  :group 'rustcity-theme
+  :set (lambda (sym val)
+         (set-default sym val)
+         (when (fboundp 'rustcity--recompute-derived-palettes)
+           (rustcity--recompute-derived-palettes))))
+
+;; HSL correction helpers (after defcustom so the variable is known).
+(defun rustcity--correct-hsl (hsl)
+  "Add `rustcity-hsl-correction' deltas to HSL (h s l) list.
+Uses cl-destructuring-bind for clarity (cl-lib is already required
+and cl-loop is used elsewhere with the cl- prefix)."
+  (cl-destructuring-bind (h s l) hsl
+    (cl-destructuring-bind (dh ds dl) rustcity-hsl-correction
+      (list (mod (+ h dh) 360.0)
+            (max 0.0 (min 100.0 (+ s ds)))
+            (max 0.0 (min 100.0 (+ l dl)))))))
+
 (defun rustcity--hex-palette (hsl-palette)
-  "Convert HSL alist to hex alist using `hsluv-hsluv-to-hex'."
+  "Convert HSL alist to hex alist using `hsluv-hsluv-to-hex'.
+Respects the current value of `rustcity-hsl-correction'."
   (cl-loop for entry in hsl-palette
            for name = (car entry)
-           for hsl = (cdr entry)
+           for hsl = (rustcity--correct-hsl (cdr entry))
            collect `(,name . ,(hsluv-hsluv-to-hex hsl))))
 
-(defconst rustcity-downpour
-  (rustcity--hex-palette rustcity-downpour-hsl))
+(defvar rustcity-downpour nil
+  "Derived hex palette for the downpour (light/washed) variant.
+Computed from `rustcity-downpour-hsl' + `rustcity-hsl-correction'.")
 
-(defconst rustcity-neon
-  (rustcity--hex-palette rustcity-neon-hsl))
+(defvar rustcity-neon nil
+  "Derived hex palette for the neon (dark) variant.
+Computed from `rustcity-neon-hsl' + `rustcity-hsl-correction'.")
+
+(defun rustcity--recompute-derived-palettes ()
+  "Recompute `rustcity-downpour' and `rustcity-neon' from HSL bases + correction."
+  (setq rustcity-downpour (rustcity--hex-palette rustcity-downpour-hsl)
+        rustcity-neon (rustcity--hex-palette rustcity-neon-hsl)))
+
+;; Initial computation (after defcustom and helpers are defined).
+(rustcity--recompute-derived-palettes)
 
 ;;;###autoload
 (defun rustcity-palette (&optional variant)
@@ -94,6 +154,7 @@ The alist uses the theme's internal semantic palette keys:
                  for the chosen variant)
   red orange yellow green cyan blue purple magenta  (accent hues)
 
+The returned colors respect `rustcity-hsl-correction' (if non-zero).
 For external tools / terminal emulators prefer `rustcity-export-palette',
 which maps to conventional ANSI/terminal color names (background, black,
 brightblack, ...)."
@@ -210,13 +271,19 @@ brightblack, ...)."
   ;;    - Tables, dates, and calendar elements commonly inherit from the type
   ;;      face (cyan/blue) or fall back to mono.
 
-  ;; Rustcity uses higher saturation on the mono ramp (especially in the neon
-  ;; variant) and on accents to evoke a vibrant industrial/neon aesthetic,
-  ;; while still following the core principles of perceptual gray ramps for
-  ;; hierarchy, limited distinct hues, heavy reliance on mono + :inherit for
-  ;; structure, and reserving saturated colors for transient highlights.
-  ;; The concrete assignments below and the extensive use of mono ramp layers
-  ;; are applications of the general patterns described above.
+  ;; Rustcity follows the complementary/higher-pop strategy (see B above) for
+  ;; its accent hues to evoke the vibrant, energetic neon city aesthetic.
+  ;; Greater use of opposing or warmer hues (spread across the circle with
+  ;; high saturation in neon variant) for stronger vibrancy, immediate pop,
+  ;; and visual distinction against the cool industrial/rain-washed bg,
+  ;; while still strictly limiting total distinct hues, relying heavily on
+  ;; the (high-sat in neon) mono gray ramp + :inherit for structure and
+  ;; hierarchy, and reserving the most saturated accents for transient
+  ;; overlays.  This matches the "neon街" image of glowing opposing lights
+  ;; (warm signage vs cool night/rain) with perceptual mono foundation for
+  ;; the empty streets and rusted details.  Concrete h/s/l assignments and
+  ;; the extensive mono usage apply the general patterns (A-D) + this
+  ;; higher-pop choice.
 
   (custom-theme-set-faces
    'rustcity
@@ -285,9 +352,46 @@ brightblack, ...)."
 
    ;; --- Navigation & project (dired, bookmark, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
+   `(dired-perm-write ((,class (:foreground ,mono4 :underline t))))
    `(treemacs-root-face ((,class (:height unspecified))))
    `(bookmark-face ((,class (:foreground ,mono5 :distant-foreground ,mono5 :background unspecified))))
    `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
+
+   ;; --- Marginalia (completion annotations; tone down lively file attrs) ---
+   ;; Follows the mono usage (supplementary file info -> shadow/mono4 or
+   ;; font-lock-comment-face/mono5) and colored semantic de-facto documented
+   ;; in the design notes above.  Explicitly overrides marginalia's default
+   ;; inherits from font-lock-* (which would produce purple/red/magenta/cyan
+   ;; noise on "lrwxr-xr-x ..." permission strings and similar).
+   ;; All marginalia-file-priv-* now use the shadow family for visual
+   ;; uniformity within the compact permission annotation string.
+   ;; Weight/underline/italic provide intra-mono distinction (e.g. bold 'd'
+   ;; for dir, underline for write), consistent with the low-key
+   ;; dired-perm-write precedent (see above).  Leverages :inherit heavily
+   ;; to respect marginalia's own face hierarchy (e.g. marginalia-size
+   ;; inherits number, marginalia-file-name inherits documentation)
+   ;; without touching the base font-lock-*/shadow definitions.
+   ;; (For rustcity's higher-pop aesthetic the orderless matches use warm
+   ;; pop colors, but file attrs in marginalia stay low-key mono.)
+   `(marginalia-documentation ((,class (:inherit font-lock-comment-face))))
+   `(marginalia-file-name ((,class (:inherit marginalia-documentation))))
+   `(marginalia-file-owner ((,class (:inherit shadow))))
+   `(marginalia-size ((,class (:inherit shadow))))
+   `(marginalia-date ((,class (:inherit shadow))))
+   `(marginalia-file-priv-no ((,class (:inherit shadow))))
+   `(marginalia-file-priv-dir ((,class (:inherit shadow :weight bold))))
+   `(marginalia-file-priv-link ((,class (:inherit shadow :slant italic))))
+   `(marginalia-file-priv-read ((,class (:inherit shadow))))
+   `(marginalia-file-priv-write ((,class (:inherit shadow :underline t))))
+   `(marginalia-file-priv-exec ((,class (:inherit shadow))))
+   `(marginalia-file-priv-other ((,class (:inherit shadow))))
+   `(marginalia-file-priv-rare ((,class (:inherit shadow))))
+   ;; Other marginalia faces (key, number, on/off, archive, installed,
+   ;; value, etc.) intentionally left to their defface defaults or the
+   ;; existing font-lock-/success-/error- inherits; they align with
+   ;; semantic de-facto (e.g. on=success/green, archive=warning) or the
+   ;; higher-pop cluster used for orderless matches and do not contribute
+   ;; to the file-perm liveliness problem.
 
    ;; --- Dev tools (eglot, compilation, ein) ---
    `(eglot-mode-line ((,class (:weight unspecified))))
@@ -313,22 +417,22 @@ brightblack, ...)."
    `(org-agenda-dimmed-todo-face ((,class (:inherit font-lock-comment-face))))
    `(org-todo ((,class (:inverse-video t :foreground ,red :background ,mono0))))
    `(org-done ((,class (:inverse-video t :foreground ,green :background ,mono0))))
-   `(org-document-title ((,class (:inherit font-lock-constant-face))))
+   `(org-document-title ((,class (:foreground ,mono6 :weight bold))))
    `(org-column ((,class (:background ,mono2))))
    `(org-column-title ((,class (:inherit org-column))))
-   `(org-table ((,class (:foreground ,cyan))))
+   `(org-table ((,class (:foreground ,mono6))))
    `(org-tag ((,class (:weight unspecified))))
    `(org-archived ((,class (:inherit org-headline-done))))
    `(org-drawer ((,class (:inherit font-lock-comment-face))))
    `(org-special-keyword ((,class (:inherit font-lock-comment-face))))
-   `(org-date ((,class (:inherit font-lock-type-face))))
+   `(org-date ((,class (:foreground ,mono5))))
    `(org-time-grid ((,class (:inherit font-lock-comment-face))))
-   `(org-scheduled ((,class (:foreground ,green))))
+   `(org-scheduled ((,class (:foreground ,mono6))))
    `(org-scheduled-today ((,class (:foreground ,mono6))))
    `(org-scheduled-previously ((,class (:foreground ,mono5))))
    `(org-upcoming-deadline ((,class (:inherit org-scheduled-previously))))
    `(org-agenda-structure ((,class (:foreground ,mono6 :weight unspecified))))
-   `(org-agenda-current-time ((,class (:inherit font-lock-keyword-face))))
+   `(org-agenda-current-time ((,class (:foreground ,mono6 :weight bold))))
    `(org-agenda-date-today ((,class (:foreground ,mono6 :weight bold))))
    `(org-agenda-date-weekend ((,class (:foreground ,mono4))))
    `(org-agenda-clocking ((,class (:slant italic))))
@@ -338,6 +442,66 @@ brightblack, ...)."
    `(org-noter-no-notes-exist-face ((,class (:foreground ,mono5))))
    `(deft-header-face ((,class (:inherit font-lock-builtin-face))))
    `(deft-title-face ((,class (:inherit font-lock-constant-face))))
+
+   ;; --- Magit (Git porcelain; rich derived mode) ---
+   ;; Follows design notes: "Org/Magit/Agenda and similar rich modes inherit the
+   ;; font-lock and mono decisions heavily; hues only for key status indicators".
+   ;; All specs use the variant-specific mono*/accent vars bound in the enclosing
+   ;; let*, so no explicit dark/light branching is needed here (unlike many
+   ;; magit deffaces).  This also works well with rustcity's higher-pop
+   ;; (accents will pop more due to high sat in neon variant).
+   ;; Prefer :inherit + mono* over direct colors for harmony and DRY.
+   ;; :extend t for full-width lines (Emacs 27+).
+   `(magit-section-highlight ((,class (:background ,mono1 :extend t))))
+   `(magit-section-heading ((,class (:inherit font-lock-keyword-face :weight bold))))
+   `(magit-section-secondary-heading ((,class (:weight bold))))
+   `(magit-section-heading-selection ((,class (:inherit magit-section-highlight :foreground ,orange :weight bold))))
+   `(magit-diff-file-heading ((,class (:weight bold))))
+   `(magit-diff-file-heading-highlight ((,class (:inherit magit-section-highlight :weight bold))))
+   `(magit-diff-file-heading-selection ((,class (:inherit magit-diff-file-heading-highlight :foreground ,orange))))
+   `(magit-diff-hunk-heading ((,class (:background ,mono2 :foreground ,mono6 :extend t))))
+   `(magit-diff-hunk-heading-highlight ((,class (:background ,mono3 :foreground ,mono7 :extend t))))
+   `(magit-diff-hunk-heading-selection ((,class (:inherit magit-diff-hunk-heading-highlight :foreground ,orange))))
+   `(magit-diff-conflict-heading ((,class (:inherit magit-diff-hunk-heading))))
+   `(magit-diff-revision-summary ((,class (:inherit magit-diff-hunk-heading))))
+   `(magit-diff-lines-heading ((,class (:background ,orange :foreground ,mono0 :extend t))))
+   `(magit-diff-context ((,class (:foreground ,mono5))))
+   `(magit-diff-context-highlight ((,class (:background ,mono1 :foreground ,mono6 :extend t))))
+   `(magit-diff-added ((,class (:background ,mono1 :foreground ,green :extend t))))
+   `(magit-diff-added-highlight ((,class (:background ,mono2 :foreground ,green :extend t))))
+   `(magit-diff-removed ((,class (:background ,mono1 :foreground ,red :extend t))))
+   `(magit-diff-removed-highlight ((,class (:background ,mono2 :foreground ,red :extend t))))
+   `(magit-diff-base ((,class (:background ,mono1 :foreground ,yellow :extend t))))
+   `(magit-diff-base-highlight ((,class (:background ,mono2 :foreground ,yellow :extend t))))
+   `(magit-diff-our ((,class (:inherit magit-diff-removed))))
+   `(magit-diff-their ((,class (:inherit magit-diff-added))))
+   `(magit-diff-our-highlight ((,class (:inherit magit-diff-removed-highlight))))
+   `(magit-diff-their-highlight ((,class (:inherit magit-diff-added-highlight))))
+   `(magit-diffstat-added ((,class (:foreground ,green))))
+   `(magit-diffstat-removed ((,class (:foreground ,red))))
+   `(magit-process-ok ((,class (:foreground ,green :weight bold))))
+   `(magit-process-ng ((,class (:foreground ,red :weight bold))))
+   `(magit-log-author ((,class (:foreground ,mono6))))
+   `(magit-log-date ((,class (:foreground ,mono5))))
+   `(magit-log-graph ((,class (:foreground ,mono4))))
+   `(magit-dimmed ((,class (:foreground ,mono4))))
+   `(magit-hash ((,class (:foreground ,mono4))))
+   `(magit-tag ((,class (:foreground ,yellow :weight bold))))
+   `(magit-branch-remote ((,class (:foreground ,green :weight bold))))
+   `(magit-branch-local ((,class (:foreground ,cyan :weight bold))))
+   `(magit-branch-current ((,class (:foreground ,blue :weight bold :box t))))
+   `(magit-branch-upstream ((,class (:slant italic))))
+   `(magit-head ((,class (:inherit magit-branch-local))))
+   `(magit-refname ((,class (:foreground ,mono5))))
+   `(magit-keyword ((,class (:inherit font-lock-string-face))))
+   `(magit-keyword-squash ((,class (:inherit font-lock-warning-face))))
+   `(magit-blame-highlight ((,class (:background ,mono2 :extend t))))
+   `(magit-blame-heading ((,class (:background ,mono2 :foreground ,mono6 :extend t
+                                    :box (:color ,mono2 :line-width 2)))))
+   `(magit-blame-summary ((,class (:foreground ,mono7))))
+   `(magit-blame-hash ((,class (:foreground ,mono4))))
+   `(magit-blame-name ((,class (:foreground ,mono6))))
+   `(magit-blame-date ((,class (:foreground ,mono5))))
 
    ;; --- Calendar / eww (other apps) ---
    `(calendar-today ((,class (:inherit font-lock-warning-face))))
@@ -399,6 +563,27 @@ VARIANT is `neon' or `downpour' (defaults from `frame-background-mode')."
          (concat "{\n" json-pairs "\n}")))
       (_
        (error "Unsupported FORMAT: %s. Use 'json, 'alist or 'hex-list" format)))))
+
+;;;###autoload
+(defun rustcity-apply-hsl-correction (&optional correction)
+  "Recompute derived palettes using CORRECTION (or current value) and refresh.
+
+If the rustcity theme is active this disables and reloads it so the new
+palette takes effect immediately (preserving the prior
+`frame-background-mode').  This is the supported way to change the
+correction at runtime after the package has been loaded.
+
+Example:
+  (setq rustcity-hsl-correction \\='(0.0 0.0 -2.0))
+  (rustcity-apply-hsl-correction)"
+  (when correction
+    (setq rustcity-hsl-correction correction))
+  (rustcity--recompute-derived-palettes)
+  (when (custom-theme-enabled-p 'rustcity)
+    (let ((was-light (eq frame-background-mode 'light)))
+      (disable-theme 'rustcity)
+      (setq frame-background-mode (if was-light 'light 'dark))
+      (load-theme 'rustcity t))))
 
 ;;;###autoload
 (when load-file-name

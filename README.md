@@ -64,7 +64,15 @@ After loading the package (or the theme), the palette is available in two ways:
   in terminal configs. 'hex-list returns exactly 16 hex values in the ANSI 0-15
   slot order chosen for this palette.
 
-The canonical definitions are the HSLuv constants (`rustcity-neon-hsl` / `rustcity-downpour-hsl`). Hex values (`rustcity-neon`, `rustcity-downpour`) and the accessors are derived from them.
+## Display compensation
+
+```elisp
+(setq rustcity-hsl-correction '(0.0 0.0 -1.5))  ; e.g. darken L a bit
+(rustcity-apply-hsl-correction)                 ; then reloads theme if active
+```
+See the defcustom docstring for details and caveats (linear approx. in HSLuv space; useful for neon/dark setups on different displays).
+
+The canonical definitions are the HSLuv constants (`rustcity-neon-hsl` / `rustcity-downpour-hsl`). Hex values (`rustcity-neon`, `rustcity-downpour`) and the accessors are derived from them (respecting `rustcity-hsl-correction` if non-zero).
 
 Example JSON (via `rustcity-export-palette 'json 'neon`):
 ```json
@@ -113,9 +121,9 @@ Example JSON (via `rustcity-export-palette 'json 'neon`):
 | brightmagenta       | purple       | #b67cff         | #ac63ff            |
 | magenta             | magenta      | #ff3ff8         | #f200eb            |
 
-Exact values are generated from HSLuv at load time. They are exposed via the HSL constants (`rustcity-neon-hsl`, `rustcity-downpour-hsl`), the derived hex constants (`rustcity-neon`, `rustcity-downpour`), and the accessors `rustcity-palette` (internal semantic keys) / `rustcity-export-palette` (ANSI/terminal names for external use).
+Exact values are generated from HSLuv at load time (with `rustcity-hsl-correction` deltas applied if set). They are exposed via the HSL constants (`rustcity-neon-hsl`, `rustcity-downpour-hsl`), the derived hex variables (`rustcity-neon`, `rustcity-downpour`), and the accessors `rustcity-palette` (internal semantic keys) / `rustcity-export-palette` (ANSI/terminal names for external use).
 
-For terminal emulators that want a 16-color palette, use the values from `rustcity-export-palette` (or run it and copy). The 16 ANSI slots are assigned from the 16 internal colors; some "bright" slots receive gray-ramp entries because the design uses one unified 8-step mono ramp + 8 saturated accent hues (see `rustcity-export-palette` for the full mapping including aliases like brightcyan=background). 'hex-list gives the direct ordered list for slot 0-15.
+For terminal emulators that want a 16-color palette, use the values from `rustcity-export-palette` (or run it and copy). The 16 ANSI slots are assigned from the 16 internal colors; some "bright" slots receive gray-ramp entries because the design uses one unified 8-step mono ramp + 8 saturated accent hues (see `rustcity-export-palette` for the full mapping including aliases like brightcyan=background). 'hex-list gives the direct ordered list for slot 0-15. Magit and Marginalia faces are also provided and tuned to the mono ramp (with higher-pop accents) for harmony in the neon aesthetic.
 
 ## License
 
@@ -123,4 +131,4 @@ MIT License. See `LICENSE`.
 
 ## Credits
 
-Original concept and implementation by yoshzucker. Structural modernizations (design notes, face refinements, documentation) backported from gensho-theme (https://github.com/yoshzucker/gensho-theme). Extracted from personal dotfiles into a standalone package.
+Original concept and implementation by yoshzucker. Structural modernizations (design notes, face refinements, documentation, hsl-correction, marginalia/magit faces) backported/adapted from gensho-theme (https://github.com/yoshzucker/gensho-theme), with complementary/higher-pop strategy for the neon city theme. Extracted from personal dotfiles into a standalone package.
