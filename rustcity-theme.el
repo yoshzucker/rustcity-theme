@@ -332,7 +332,7 @@ included in the 16-color export."
    `(fringe ((,class (:background ,mono0))))
    `(border ((,class (:background ,mono0))))
    `(internal-border ((,class (:background ,mono0))))
-   `(vertical-border ((,class (:foreground ,mono2))))
+   `(vertical-border ((,class (:foreground ,mono0))))
    `(region ((,class (:background ,mono1 :extend t))))
    `(highlight ((,class (:background ,mono1))))
    `(shadow ((,class (:foreground ,mono4))))
@@ -534,7 +534,7 @@ included in the 16-color export."
    `(magit-keyword-squash ((,class (:inherit font-lock-warning-face))))
    `(magit-blame-highlight ((,class (:background ,mono2 :extend t))))
    `(magit-blame-heading ((,class (:background ,mono2 :foreground ,mono6 :extend t
-                                    :box (:color ,mono2 :line-width 2)))))
+                                               :box (:color ,mono2 :line-width 2)))))
    `(magit-blame-summary ((,class (:foreground ,mono7))))
    `(magit-blame-hash ((,class (:foreground ,mono4))))
    `(magit-blame-name ((,class (:foreground ,mono6))))
