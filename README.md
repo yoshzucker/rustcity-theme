@@ -47,10 +47,15 @@ After loading the package (or the theme), the palette is available in two ways:
   (rustcity-palette)        ; current variant based on frame-background-mode
   (rustcity-palette 'neon)  ; or 'downpour
   ```
-  Returns the raw alist of 16 entries using the theme's internal semantic keys:
-  `mono0`..`mono7` (perceptual gray ramp; `mono0` is the background, `mono7` the
-  foreground for the variant) plus the 8 accent hues `red orange yellow green cyan
-  blue purple magenta`.
+  Returns the raw alist using the theme's internal semantic keys:
+  `mono0`..`mono7` (perceptual gray ramp for main content; `mono0` is the
+  background, `mono7` the foreground for the variant; de-facto roles: mono1 for
+  subtle selection/highlight on main, etc.) plus `dim0`, `dim1` (dedicated dim
+  levels between mono0 and mono1 for non-selected/unreal support in
+  auto-dim-other-buffers-mode and solaire-mode) plus the 8 accent hues `red
+  orange yellow green cyan blue purple magenta`.
+  The core published palette for export remains the 16 (8 mono + 8 accent);
+  dim* are extras for Emacs UI faces.
 
 - For external tools (Alacritty, kitty, WezTerm, ghostty, dircolors, terminal OSC
   sequences, etc.):
@@ -62,7 +67,8 @@ After loading the package (or the theme), the palette is available in two ways:
   'json and 'alist use conventional ANSI/terminal color names (`background`,
   `foreground`, `black`, `red`, ..., `brightwhite`) so the data is directly usable
   in terminal configs. 'hex-list returns exactly 16 hex values in the ANSI 0-15
-  slot order chosen for this palette.
+  slot order chosen for this palette (the core 8 mono + 8 accent; dim* levels
+  are UI-only and not exported).
 
 ## Display compensation
 
@@ -73,6 +79,19 @@ After loading the package (or the theme), the palette is available in two ways:
 See the defcustom docstring for details and caveats (linear approx. in HSLuv space; useful for neon/dark setups on different displays).
 
 The canonical definitions are the HSLuv constants (`rustcity-neon-hsl` / `rustcity-downpour-hsl`). Hex values (`rustcity-neon`, `rustcity-downpour`) and the accessors are derived from them (respecting `rustcity-hsl-correction` if non-zero).
+
+## Non-selected window support
+
+The theme provides face definitions for two popular de-facto modes that dim non-selected or "unreal" buffers/windows:
+
+- `auto-dim-other-buffers-mode`
+- `solaire-mode`
+
+Their dim faces use the dedicated `dim0` level (between `mono0` and the main aux step at `mono1`). This gives a subtle auxiliary tone for non-selected areas without affecting the de-facto subtle selection/highlight roles that live at `mono1` on main content.
+
+`dim1` is also available in the palette for further customization.
+
+No colors outside the published structure are used.
 
 Example JSON (via `rustcity-export-palette 'json 'neon`):
 ```json

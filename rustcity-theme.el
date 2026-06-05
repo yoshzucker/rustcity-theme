@@ -46,6 +46,8 @@
 
 (defconst rustcity-downpour-hsl
   '((mono0   . (260  20  86))
+    (dim0    . (260  20  84))   ; dedicated dim levels for non-selected (weaker than mono1 aux)
+    (dim1    . (260  20  82))
     (mono1   . (260  20  79))
     (mono2   . (260  20  72))
     (mono3   . (260  20  65))
@@ -64,6 +66,8 @@
 
 (defconst rustcity-neon-hsl
   '((mono0   . (260  55  14))
+    (dim0    . (260  55  16))   ; dedicated dim levels for non-selected (weaker than mono1 aux)
+    (dim1    . (260  55  18.5))
     (mono1   . (260  55  21))
     (mono2   . (260  55  28))
     (mono3   . (260  55  35))
@@ -150,14 +154,21 @@ Computed from `rustcity-neon-hsl' + `rustcity-hsl-correction'.")
 VARIANT is `neon' or `downpour' (defaults from `frame-background-mode').
 
 The alist uses the theme's internal semantic palette keys:
-  mono0..mono7  (perceptual gray ramp; mono0 is background, mono7 foreground
-                 for the chosen variant)
+  mono0..mono7  (perceptual gray ramp for main content; mono0 is background,
+                 mono7 foreground for the chosen variant; de-facto roles:
+                 mono1 for subtle selection/highlight on main, etc.)
+  dim0, dim1    (dedicated dim levels between mono0 and mono1, for the base
+                 background of non-selected/unreal areas when using the
+                 supported modes auto-dim-other-buffers-mode or solaire-mode.
+                 Allows weaker dim than the standard aux step at mono1 while
+                 preserving the 8-step mono semantics for content.)
   red orange yellow green cyan blue purple magenta  (accent hues)
 
 The returned colors respect `rustcity-hsl-correction' (if non-zero).
 For external tools / terminal emulators prefer `rustcity-export-palette',
 which maps to conventional ANSI/terminal color names (background, black,
-brightblack, ...)."
+brightblack, ...). The dim* levels are internal to Emacs UI and not
+included in the 16-color export."
   (let ((v (or variant
                (if (eq frame-background-mode 'light) 'downpour 'neon))))
     (if (eq v 'downpour) rustcity-downpour rustcity-neon)))
@@ -172,6 +183,8 @@ brightblack, ...)."
        (mono5  (alist-get 'mono5 colors))
        (mono6  (alist-get 'mono6 colors))
        (mono7  (alist-get 'mono7 colors))
+       (dim0   (alist-get 'dim0 colors))
+       (dim1   (alist-get 'dim1 colors))
        (red    (alist-get 'red colors))
        (orange (alist-get 'orange colors))
        (yellow (alist-get 'yellow colors))
@@ -203,7 +216,13 @@ brightblack, ...)."
   ;;                       high-attention pop elements that sit on colored
   ;;                       backgrounds.
   ;;     step ~1 (next):   subtle backgrounds for selection, current item,
-  ;;                       highlights, matching regions, etc.
+  ;;                       highlights, matching regions, etc. (the standard
+  ;;                       de-facto aux step on main content).
+  ;;                       Dedicated dim levels (dim0/dim1, between mono0 and
+  ;;                       this step) are provided for the supported modes'
+  ;;                       non-selected/unreal faces, so dim can be weaker than
+  ;;                       the main aux while preserving the 8-step semantics
+  ;;                       for content.
   ;;     step ~2-3:        alt / medium subtle (active chrome bg, some
   ;;                       highlights).
   ;;     step ~4 (mid-low): faint / secondary (shadow, doc-face, low-
@@ -287,6 +306,24 @@ brightblack, ...)."
 
   (custom-theme-set-faces
    'rustcity
+
+   ;; Face support for two de-facto dimming / non-selected-window modes
+   ;; (solaire-mode for "unreal" buffers and auto-dim-other-buffers-mode for
+   ;; non-selected windows). These are the modes that can consume exact
+   ;; palette colors without inventing new ones.
+   ;;
+   ;; We use dedicated dim levels (dim0/dim1, positioned between mono0 and
+   ;; the standard aux mono1) for their base dim faces. This keeps the main
+   ;; 8-step mono ramp (and its de-facto roles at mono1 for subtle selection
+   ;; etc. on main content) unchanged, while allowing a weaker "ほんの少し"
+   ;; dim for non-selected areas. Inside dimmed areas, highlights use the
+   ;; main subtle step (mono1) or mono2 for contrast.
+   `(solaire-default-face ((,class (:background ,dim0))))
+   `(solaire-hl-line-face ((,class (:background ,mono1))))
+   `(solaire-region-face ((,class (:background ,mono1 :extend t))))
+   `(auto-dim-other-buffers ((,class (:background ,dim0))))
+   `(auto-dim-other-buffers-hide ((,class (:foreground ,dim0 :background ,dim0))))
+
    ;; --- Core primitives ---
    `(default ((,class (:foreground ,mono7 :background ,mono0))))
    `(fixed-pitch ((,class (:family unspecified))))
