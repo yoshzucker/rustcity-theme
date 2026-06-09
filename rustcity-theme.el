@@ -241,6 +241,41 @@ included in the 16-color export."
   ;; - The overall derived principle: the gray ramp layers supply the primary
   ;;   visual rhythm; color is used as accent on top of this foundation.
 
+  ;; Layered chrome / panel texture (universal application of the above)
+  ;;
+  ;; To create visual depth and a layered "slab" feel even with Emacs' sparse
+  ;; chrome primitives (no borders/shadows/gradients), we deliberately map UI
+  ;; structural elements to adjacent ramp steps. The main content plane is at
+  ;; mono0. Explicit auxiliary panels (such as the treemacs sidebar) use the
+  ;; next step (mono1) via their dedicated faces for a subtle layered effect.
+  ;;
+  ;; For the divider between such a panel and the main content, we set it to
+  ;; the main content color (mono0). This produces a clean transition without
+  ;; a visible seam line that would fight the plane expression — the
+  ;; distinction comes from the tone difference (where present) and the
+  ;; content itself.
+  ;;
+  ;; We keep normal editing buffers on the main mono0 plane. The main de-facto
+  ;; signal for non-active windows is `mode-line-inactive` (set to mono1 here,
+  ;; providing a gentle auxiliary-layer treatment at the chrome level).
+  ;; For users who want a global subtle shift for non-selected windows
+  ;; or unreal buffers, we provide explicit face support for the two de-facto
+  ;; modes that can use exact palette colors without inventing new ones:
+  ;; solaire-mode (for "unreal" buffers) and auto-dim-other-buffers-mode (for
+  ;; non-selected windows). Their dim faces are set to dim0 (a dedicated level
+  ;; between mono0 and the standard aux mono1), so enabling the mode gives a
+  ;; weaker aux tone while preserving the full de-facto role assignment for
+  ;; the main 8 levels (subtle at mono1 etc.) on content. dim1 is also
+  ;; available for customization.
+  ;;
+  ;; Selected tab and current content deliberately share mono0 so the working
+  ;; surface feels continuous, while chrome elements (bars, header) use higher
+  ;; steps for layered separation. This is ramp layering as the primary
+  ;; decoration.
+  ;;
+  ;; See the "Gutter, dividers..." section below and README for the current
+  ;; practical choices and usage notes (including how to enable the two modes).
+
   ;; Accent colors (hues)
   ;;
   ;; A. Observed convergence on semantic mappings
@@ -290,6 +325,46 @@ included in the 16-color export."
   ;;    - Tables, dates, and calendar elements commonly inherit from the type
   ;;      face (cyan/blue) or fall back to mono.
 
+  ;; === General knowledge (applicable to any theme; derived from color
+  ;; theory surveys including 色彩検定/PCCS, Itten/Judd, and de-facto UI
+  ;; theme analysis) ===
+  ;; - Hue circle and hue difference (PCCS 24-hue circle, ~15° per step;
+  ;;   色彩検定 3級 level): hue diff 0 = identical hue (vary tone only);
+  ;;   diff 1 = adjacent; 2-3 = similar (類似色相配色, harmonious, stable,
+  ;;   analogous basic); 4-7 = medium; 8-10 = contrast (対照色相配色,
+  ;;   warm/cool opposition, clear pop); 11-12 = complementary (補色, 180°,
+  ;;   strong but use carefully).
+  ;; - Geometric schemes (Itten/Judd "order principle"): diad 180°,
+  ;;   triadic 120°, tetradic square 90° or rectangle. These are
+  ;;   number-first (geometric positions for harmony) and can feel
+  ;;   artificial/sensibility-light; treat as reference only, not primary
+  ;;   for image-driven themes.
+  ;; - Other harmony principles (Judd 4 principles, 色彩検定): similarity
+  ;;   (common attributes harmonize), clarity/contrast (明瞭性), order
+  ;;   (geometric as above), familiarity (なじみ, habitual/natural combos).
+  ;;   Dominant-color scheme (one main hue family + tone variations);
+  ;;   tone-on-tone etc.
+  ;; - UI/theme practice (from nord, solarized, modus etc.): when bg is
+  ;;   tinted (low-sat hue), analogous/cool-bias (cluster near bg hue)
+  ;;   favors calm + mono-ramp prominence. Complementary/higher-pop for
+  ;;   vibrancy. Strictly limit distinct hues (4-8 total). Base (bg/fg/
+  ;;   most chrome) = mono ramp; accents limited to semantic roles.
+  ;;   De-facto semantics (strong convergence): string/literal=green,
+  ;;   keyword=purple/mauve, function=magenta or blue-magenta, type=cyan
+  ;;   or blue (low pop structure), constant=near-bg blue, builtin=red,
+  ;;   warning=yellow, error=red; success=green; link=blue. Transient/
+  ;;   highlight can use more pop. Secondary/derived faces (many org,
+  ;;   calendar, etc.) fall to mono + :inherit to avoid hue noise.
+  ;;   Distribution tactics: even spacing (balance), clustered (warms for
+  ;;   energy/alert/seasonal, cools for structure), sector emphasis.
+  ;;   Reference choice: bg hue as anchor for analogous (common for
+  ;;   tinted-bg calm themes); or key semantic / natural reference.
+  ;;   Overall process (structural, any theme): 1. de-facto semantic survey,
+  ;;   2. choose harmony type per desired image (calm vs pop vs seasonal),
+  ;;   3. limit total hues, 4. use tone/s for variation instead of more
+  ;;   hues, 5. visual tune. Hue-diff theory often for 2-4 colors; for 8+
+  ;;   use composites (dominant analogous group + contrast accents).
+
   ;; Rustcity follows the complementary/higher-pop strategy (see B above) for
   ;; its accent hues to evoke the vibrant, energetic neon city aesthetic.
   ;; Greater use of opposing or warmer hues (spread across the circle with
@@ -332,8 +407,27 @@ included in the 16-color export."
    `(fringe ((,class (:background ,mono0))))
    `(border ((,class (:background ,mono0))))
    `(internal-border ((,class (:background ,mono0))))
+   ;; Divider between windows. To achieve a clean layered feel, we set the
+   ;; divider to the main content color (mono0). This removes any visible seam
+   ;; line artifact between a differentiated side panel (e.g. treemacs at mono1)
+   ;; and the main editor (mono0). The distinction between areas is then
+   ;; expressed purely by the bg tone difference (where used) + the content
+   ;; itself (tree structure vs code, icons, etc.) and window geometry.
+   ;;
+   ;; This is a common de-facto approach for quiet, layered looks: avoid a
+   ;; contrasting border line that fights the plane expression. Regular
+   ;; content-to-content splits can still get subtle separation when
+   ;; window-divider-mode is enabled (see the Gutter section below).
+   ;;
+   ;; Note on treemacs mono1: The step from main mono0 to mono1 is the standard
+   ;; first auxiliary step (panels use this; the even weaker dim0/dim1 are for
+   ;; the modes' non-selected content). If it feels too strong compared to the
+   ;; main bg, you can override `treemacs-window-background-face` to mono0 in
+   ;; your personal config; the panel character will come from its distinct
+   ;; content, hl-line, and the clean divider treatment.
    `(vertical-border ((,class (:foreground ,mono0))))
    `(region ((,class (:background ,mono1 :extend t))))
+   `(secondary-selection ((,class (:background ,mono2))))
    `(highlight ((,class (:background ,mono1))))
    `(shadow ((,class (:foreground ,mono4))))
    `(match ((,class (:foreground ,mono0 :background ,green))))
@@ -345,15 +439,80 @@ included in the 16-color export."
    `(success ((,class (:foreground ,green))))
    `(minibuffer-prompt ((,class (:foreground ,mono6))))
    `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
+   `(help-key-binding ((,class (:foreground ,mono7 :background ,mono2 :box unspecified))))
 
-   ;; --- Modeline, header-line, tab-bar (UI chrome) ---
+   ;; --- Modeline, header-line, tab-bar, tab-line (UI chrome) ---
+   ;; Layered chrome strategy: We differentiate "chrome layers" (bars, side
+   ;; panels) from the main "content plane" using adjacent steps on the mono
+   ;; ramp. This is the primary way to create visual depth and a layered
+   ;; "slab" feel in Emacs, which lacks heavy decorative primitives (borders,
+   ;; shadows, titlebar gradients) available in other editors.
+   ;; - tab-bar bg at mono2 (toolbar/frame chrome layer).
+   ;; - Selected tab bg = mono0 (flushes with buffer default bg), so the active
+   ;;   view surface is continuous from the tab "lid" down into the content.
+   ;;   This creates the recessed/chiseled selection + unified chrome slab.
+   ;; - Inactive tabs sit on the bar (mono1) with dimmer fg for clear but quiet
+   ;;   distinction.
+   ;; - tab-line (per-window) follows a similar but slightly more content-adjacent
+   ;;   layering (bar at mono1) since it lives closer to buffer content.
+   ;; - mode-line already uses mono2 (active chrome) and mono1 (inactive),
+   ;;   harmonizing with the new tab-bar top bar.
    `(mode-line ((,class (:foreground ,mono7 :background ,mono2))))
+   ;; mode-line-inactive stays at mono1: this is chrome-layer "inactive" treatment
+   ;; (one step below active chrome at mono2). It is not a content subtle bg.
+   ;; When a window is dimmed by the supported modes the mode-line itself may
+   ;; still be remapped or left, but the layer distinction is preserved per
+   ;; de-facto (inactive chrome is distinct from both main content and the
+   ;; dim content bg).
    `(mode-line-inactive ((,class (:foreground ,mono6 :background ,mono1))))
    `(mode-line-buffer-id ((,class (:weight unspecified))))
    `(header-line ((,class (:foreground ,mono6 :background ,mono3 :weight unspecified))))
-   `(tab-bar ((,class (:foreground ,mono7 :background ,mono0))))
-   `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono2 :box unspecified))))
+   `(tab-bar ((,class (:foreground ,mono7 :background ,mono2))))
+   `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
+   ;; tab inactive tabs sit "below" the bar (mono2) using mono1. This is a
+   ;; chrome recess, not a content selection. Kept at mono1 for layer
+   ;; coherence even with the compressed low end.
    `(tab-bar-tab-inactive ((,class (:foreground ,mono6 :background ,mono1))))
+   `(tab-bar-tab-group-current ((,class (:inherit tab-bar-tab :weight bold))))
+   `(tab-bar-tab-group-inactive ((,class (:inherit tab-bar-tab-inactive))))
+   ;; tab-line lives closer to content. Its bar bg at mono1 and inactive at
+   ;; mono1 are chrome-adjacent.
+   `(tab-line ((,class (:foreground ,mono7 :background ,mono1))))
+   `(tab-line-tab ((,class (:foreground ,mono6 :background ,mono1))))
+   `(tab-line-tab-current ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
+   `(tab-line-tab-inactive ((,class (:foreground ,mono5 :background ,mono1))))
+   `(tab-line-tab-modified ((,class (:inherit tab-line-tab-current :weight bold))))
+
+   ;; --- Gutter, dividers, borders (additional vertical/horizontal layering) ---
+   ;; These provide extra "slab" and "grout" elements with almost zero added
+   ;; decoration primitives, purely via mono ramp assignment.
+   ;; Gutter (line numbers) acts as a vertical pillar on the left.
+   ;;
+   ;; Divider choice for clean layered feel:
+   ;; Setting the divider to the main content color (mono0) produces the nicest
+   ;; layered look without a visible seam line artifact. When using a
+   ;; differentiated side panel (e.g. treemacs at mono1), the transition to the
+   ;; main mono0 editor is seamless — the panel stands out through its tone
+   ;; and content, not through an extra contrasting border.
+   ;;
+   ;; This is a common de-facto approach for quiet, modern slate/dark themes:
+   ;; let the face (plane) tone difference and the content itself define areas,
+   ;; rather than relying on a bright divider line that can fight the plane
+   ;; expression.
+   ;;
+   ;; For regular content-to-content splits, enabling `window-divider-mode`
+   ;; can still give a very gentle separation using close tones in the ramp.
+   ;; Enable with `(window-divider-mode 1)` + the width variables.
+   ;;
+   ;; child-frame-border keeps popups framed consistently with other chrome.
+   `(line-number ((,class (:foreground ,mono4 :background ,mono0))))
+   `(line-number-current-line ((,class (:foreground ,mono6 :background ,mono1 :weight bold))))
+   `(line-number-major-tick ((,class (:foreground ,mono3 :background ,mono0 :weight bold))))
+   `(line-number-minor-tick ((,class (:foreground ,mono4 :background ,mono0))))
+   `(window-divider ((,class (:foreground ,mono0))))
+   `(window-divider-first-pixel ((,class (:foreground ,mono1))))
+   `(window-divider-last-pixel ((,class (:foreground ,mono0))))
+   `(child-frame-border ((,class (:background ,mono2))))
 
    ;; --- Font-lock (syntax primitives; bases for inherits) ---
    `(font-lock-comment-face ((,class (:foreground ,mono5 :slant italic))))
@@ -390,9 +549,42 @@ included in the 16-color export."
    ;; --- Navigation & project (dired, bookmark, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
    `(dired-perm-write ((,class (:foreground ,mono4 :underline t))))
-   `(treemacs-root-face ((,class (:height unspecified))))
    `(bookmark-face ((,class (:foreground ,mono5 :distant-foreground ,mono5 :background unspecified))))
    `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
+   `(treemacs-root-face ((,class (:height unspecified))))
+   ;; Sidebar slab: give the whole treemacs window a distinct layer (mono1)
+   ;; so it reads as a side panel next to the main content plane (mono0).
+   ;; With `vertical-border` at mono0, the transition is clean (no extra seam
+   ;; line). The panel stands out through its tone + distinct content.
+   ;; If the mono1 step feels strong vs main mono0, you can override this face
+   ;; to mono0 in your config; distinction will come from content, hl-line,
+   ;; and the clean divider.
+   ;; hl-line inside the panel uses the next step (mono2) for subtle selection.
+   `(treemacs-window-background-face ((,class (:background ,mono1))))
+   `(treemacs-hl-line-face ((,class (:background ,mono2))))
+   `(treemacs-directory-face ((,class (:inherit font-lock-type-face))))
+   `(treemacs-directory-collapsed-face ((,class (:inherit treemacs-directory-face))))
+   `(treemacs-file-face ((,class (:foreground ,mono6))))
+   `(treemacs-git-added-face ((,class (:foreground ,green))))
+   `(treemacs-git-modified-face ((,class (:foreground ,yellow))))
+   `(treemacs-git-untracked-face ((,class (:foreground ,cyan))))
+   `(treemacs-git-ignored-face ((,class (:inherit shadow))))
+   `(treemacs-git-conflict-face ((,class (:foreground ,red))))
+
+   ;; dirvish (dired-based modern file manager). We style its custom hl/inactive
+   ;; faces to follow the mono ramp. For dirvish-side (sidebar usage) the main
+   ;; directory listing background remains the normal content plane (mono0 /
+   ;; `default') because dirvish re-uses dired buffers and does not expose a
+   ;; dedicated window-background-face like treemacs. Distinction for the pane
+   ;; comes from header-line (mono3), our hl-line faces, window dividers (which
+   ;; blend to panel tone when next to a mono1 area), and optional multi-pane
+   ;; layout. This matches the design constraints of the package. See README
+   ;; for a user hook example if you want mono1 for the whole side pane.
+   ;; Recommended dired-native alternative to treemacs (for users who prefer
+   ;; dired-native navigation with built-in preview).
+   `(dirvish-hl-line ((,class (:background ,mono2 :extend t))))
+   `(dirvish-hl-line-inactive ((,class (:background ,mono1 :extend t))))
+   `(dirvish-inactive ((,class (:inherit shadow))))
 
    ;; --- Marginalia (completion annotations; tone down lively file attrs) ---
    ;; Follows the mono usage (supplementary file info -> shadow/mono4 or
@@ -450,32 +642,77 @@ included in the 16-color export."
    `(outline-8 ((,class (:inherit font-lock-keyword-face))))
 
    ;; --- Org mode + extensions (rich derived faces) ---
-   `(org-headline-done ((,class (:inherit font-lock-comment-face))))
-   `(org-agenda-dimmed-todo-face ((,class (:inherit font-lock-comment-face))))
+   ;; Document
+   `(org-document-title ((,class (:foreground ,mono7))))
+   `(org-document-info ((,class (:foreground ,mono6))))
+
+   ;; TODO / DONE
    `(org-todo ((,class (:inverse-video t :foreground ,red :background ,mono0))))
    `(org-done ((,class (:inverse-video t :foreground ,green :background ,mono0))))
-   `(org-document-title ((,class (:foreground ,mono6 :weight bold))))
-   `(org-column ((,class (:background ,mono2))))
-   `(org-column-title ((,class (:inherit org-column))))
-   `(org-table ((,class (:foreground ,mono6))))
-   `(org-tag ((,class (:weight unspecified))))
+   `(org-headline-todo ((,class (:foreground ,mono7))))
+   `(org-headline-done ((,class (:inherit font-lock-comment-face))))
    `(org-archived ((,class (:inherit org-headline-done))))
+   `(org-agenda-done ((,class (:inherit org-headline-done))))
+   `(org-agenda-dimmed-todo-face ((,class (:inherit font-lock-comment-face))))
+
+   ;; Markup / structure
    `(org-drawer ((,class (:inherit font-lock-comment-face))))
    `(org-special-keyword ((,class (:inherit font-lock-comment-face))))
+   `(org-ellipsis ((,class (:foreground ,mono4))))
+
+   ;; Tables / columns
+   `(org-table ((,class (:foreground ,mono6))))
+   `(org-table-header ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-column ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-column-title ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-tag ((,class (:weight unspecified))))
+
+   ;; Timestamps / dates
+   `(org-time-stamp ((,class (:foreground ,mono5))))
    `(org-date ((,class (:foreground ,mono5))))
+   `(org-sexp-date ((,class (:foreground ,mono5))))
+   ;; org-date-selected: defface has :inverse-video t. Override with unspecified
+   ;; so bg/fg show directly (orange badge). No child face inherits this.
+   `(org-date-selected ((,class (:foreground ,mono0 :background ,orange :inverse-video unspecified))))
+
+   ;; Formula / footnote
+   `(org-formula ((,class (:foreground ,yellow))))
+   `(org-footnote ((,class (:foreground ,mono5))))
+
+   ;; Agenda - structure & dates
+   `(org-agenda-structure ((,class (:foreground ,mono6))))
+   `(org-agenda-current-time ((,class (:foreground ,mono6 :weight bold))))
+   `(org-agenda-date-today ((,class (:foreground ,mono6))))
+   `(org-agenda-date-weekend ((,class (:foreground ,mono4))))
+   `(org-agenda-clocking ((,class (:slant italic))))
    `(org-time-grid ((,class (:inherit font-lock-comment-face))))
+
+   ;; Scheduling
    `(org-scheduled ((,class (:foreground ,mono6))))
    `(org-scheduled-today ((,class (:foreground ,mono6))))
    `(org-scheduled-previously ((,class (:foreground ,mono5))))
    `(org-upcoming-deadline ((,class (:inherit org-scheduled-previously))))
-   `(org-agenda-structure ((,class (:foreground ,mono6 :weight unspecified))))
-   `(org-agenda-current-time ((,class (:foreground ,mono6 :weight bold))))
-   `(org-agenda-date-today ((,class (:foreground ,mono6 :weight bold))))
-   `(org-agenda-date-weekend ((,class (:foreground ,mono4))))
-   `(org-agenda-clocking ((,class (:slant italic))))
-   `(org-habit-overdue-face ((,class (:background ,purple))))
+
+   ;; Habits
+   `(org-habit-clear-face ((,class (:foreground ,mono0 :background ,blue))))
+   `(org-habit-clear-future-face ((,class (:foreground ,blue :background ,mono2))))
+   `(org-habit-ready-face ((,class (:foreground ,mono0 :background ,green))))
+   `(org-habit-ready-future-face ((,class (:foreground ,green :background ,mono2))))
+   `(org-habit-alert-face ((,class (:foreground ,mono0 :background ,yellow))))
+   `(org-habit-alert-future-face ((,class (:foreground ,yellow :background ,mono2))))
+   `(org-habit-overdue-face ((,class (:foreground ,mono0 :background ,red))))
+   `(org-habit-overdue-future-face ((,class (:foreground ,orange :background ,mono3))))
+
+   ;; Other org (low-frequency)
+   `(org-clock-overlay ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-mode-line-clock-overrun ((,class (:foreground ,mono0 :background ,red))))
+   `(org-dispatcher-highlight ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-latex-and-related ((,class (:foreground ,mono5))))
+   `(org-agenda-restriction-lock ((,class (:foreground ,mono7 :background ,mono2))))
+
+   ;; Extensions (org-around packages)
    `(org-roam-header-line ((,class (:inherit header-line))))
-   `(org-noter-notes-exist-face ((,class (:foreground ,green))))
+   `(org-noter-notes-exist-face ((,class (:foreground ,mono6))))
    `(org-noter-no-notes-exist-face ((,class (:foreground ,mono5))))
    `(deft-header-face ((,class (:inherit font-lock-builtin-face))))
    `(deft-title-face ((,class (:inherit font-lock-constant-face))))
@@ -543,7 +780,9 @@ included in the 16-color export."
    ;; --- Calendar / eww (other apps) ---
    `(calendar-today ((,class (:inherit font-lock-warning-face))))
    `(calendar-weekend-header ((,class (:inherit font-lock-type-face))))
-   `(eww-valid-certificate ((,class (:weight unspecified :foreground ,green))))))
+   `(holiday ((,class (:background ,mono2))))
+   `(diary ((,class (:inherit font-lock-string-face))))
+   `(eww-valid-certificate ((,class (:weight unspecified :foreground ,mono6))))))
 
 (defconst rustcity--export-name-map
   '((mono0   . background)
