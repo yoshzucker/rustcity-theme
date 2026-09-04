@@ -681,7 +681,12 @@ included in the 16-color export."
 
    ;; Agenda - structure & dates
    `(org-agenda-structure ((,class (:foreground ,mono6))))
-   `(org-agenda-current-time ((,class (:foreground ,mono6 :weight bold))))
+   ;; The same green org-foresight rules its bars at, and no weight.  The
+   ;; package draws this very line itself whenever the hour is pinned, in
+   ;; `org-foresight-report-now' -- which falls back to `font-lock-string-face'
+   ;; here, the green above.  A different colour would make the same moment
+   ;; look like two things depending on which of them drew it.
+   `(org-agenda-current-time ((,class (:foreground ,green))))
    `(org-agenda-date-today ((,class (:foreground ,mono6))))
    `(org-agenda-date-weekend ((,class (:foreground ,mono4))))
    `(org-agenda-clocking ((,class (:slant italic))))
