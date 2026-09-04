@@ -438,6 +438,7 @@ included in the 16-color export."
    `(warning ((,class (:foreground ,yellow))))
    `(success ((,class (:foreground ,green))))
    `(minibuffer-prompt ((,class (:foreground ,mono6))))
+   `(minibuffer-nonselected ((,class (:foreground ,mono0 :background ,yellow))))
    `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
    `(help-key-binding ((,class (:foreground ,mono7 :background ,mono2 :box unspecified))))
 
@@ -466,6 +467,10 @@ included in the 16-color export."
    ;; dim content bg).
    `(mode-line-inactive ((,class (:foreground ,mono6 :background ,mono1))))
    `(mode-line-buffer-id ((,class (:weight unspecified))))
+   ;; mode-line-highlight: minimalist convention (Nord, Doom) -- replace the
+   ;; defface flat box on mouse-over with a plane shift (inherit `highlight'),
+   ;; matching the "no boxes; bg-plane carries affordance" attribute policy.
+   `(mode-line-highlight ((,class (:inherit highlight))))
    `(header-line ((,class (:foreground ,mono6 :background ,mono3 :weight unspecified))))
    `(tab-bar ((,class (:foreground ,mono7 :background ,mono2))))
    `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
@@ -545,6 +550,7 @@ included in the 16-color export."
    `(corfu-default ((,class (:background ,mono1))))
    `(corfu-current ((,class (:foreground ,mono6 :background ,mono1))))
    `(corfu-bar ((,class (:background ,mono5))))
+   `(corfu-border ((,class (:background ,mono2))))
 
    ;; --- Navigation & project (dired, bookmark, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
@@ -722,6 +728,74 @@ included in the 16-color export."
    `(deft-header-face ((,class (:inherit font-lock-builtin-face))))
    `(deft-title-face ((,class (:inherit font-lock-constant-face))))
 
+   ;; org-dayflow -- timeline column chrome on the mono/dim ramp (not raw gray20).
+   ;; Weekend bands must stay one step above mono0 so they read as texture, not
+   ;; as a second UI layer; dim0 sits between mono0 and mono1 for that purpose.
+   `(org-dayflow-weekend-column-face ((,class (:background ,dim0 :extend t))))
+   `(org-dayflow-weekend-face ((,class (:foreground ,mono4))))
+   `(org-dayflow-weekday-face ((,class (:foreground ,mono5))))
+   `(org-dayflow-units-face ((,class (:foreground ,mono5))))
+   `(org-dayflow-label-face ((,class (:foreground ,mono5))))
+   `(org-dayflow-query-face ((,class (:inherit org-agenda-structure))))
+   `(org-dayflow-now-column-face ((,class (:background ,mono1 :extend t))))
+   `(org-dayflow-cursor-column-face ((,class (:background ,mono1 :extend t))))
+   `(org-dayflow-now-unit-face ((,class (:inherit calendar-today))))
+   `(org-dayflow-cursor-unit-face ((,class (:inherit org-date-selected))))
+   `(org-dayflow-title-done-face ((,class (:inherit org-headline-done :strike-through t))))
+
+   ;; org-foresight -- the capacity bar and the rows it adds to the agenda.
+   ;; Two rules.  Grey says "work already claimed", and only three steps of it,
+   ;; two apart, because a ramp fine enough to encode six things is a ramp
+   ;; nobody reads; booked tops out at mono6, the badge's own grey, so nothing
+   ;; inside a section is louder than the badge announcing it.  Colour is kept
+   ;; for what is not claimed work, which is where the decisions are: blue is
+   ;; room -- spare, and the free gaps it is made of -- and green is life,
+   ;; neither work nor room, and not to be mistaken for either.  The bar draws
+   ;; private between travel and promised, so every pair that touches is either
+   ;; two steps of grey apart or a change of hue.
+   `(org-foresight-report-booked ((,class (:foreground ,mono6))))
+   `(org-foresight-report-travel ((,class (:foreground ,mono4))))
+   `(org-foresight-report-promised ((,class (:foreground ,mono2))))
+   `(org-foresight-report-spare ((,class (:foreground ,blue))))
+   ;; Emptiness, wherever it is drawn: the same dot in the bar and in the
+   ;; sparkline, so two identical characters stop looking like two sizes.
+   ;; gensho reaches for weight here; this theme does not have that register --
+   ;; a step of the ramp is what tells the dot from the blocks beside it.
+   `(org-foresight-report-empty ((,class (:foreground ,mono4))))
+   `(org-foresight-report-private ((,class (:foreground ,green))))
+   ;; The reserve keeps the package's outline in the overrun's own yellow: it
+   ;; is the last thing between the day and an overrun, so spending it is
+   ;; being over without having said so.  `unclocked' is that same reserve
+   ;; found spent, so it is the same yellow -- the outline held open ahead of
+   ;; now, met empty behind it.  The bar boxes every segment itself, so
+   ;; nothing here needs to set one.
+   `(org-foresight-report-overcommitted ((,class (:foreground ,yellow))))
+   `(org-foresight-report-surge ((,class (:foreground ,yellow))))
+   `(org-foresight-report-unclocked ((,class (:foreground ,yellow))))
+   ;; Hours the watcher accounted for and nobody claimed: the grey the
+   ;; sparkline already gives time away from the machine.
+   `(org-foresight-report-away ((,class (:foreground ,mono4))))
+   ;; Where now falls, in the colour of the hours it protects: everything
+   ;; right of the mark is the part of the day still to be decided.  The same
+   ;; green `org-agenda-current-time' is set to above, since the package draws
+   ;; that line itself whenever the hour is pinned.
+   `(org-foresight-report-now ((,class (:foreground ,green))))
+   `(org-foresight-agenda-derived ((,class (:slant italic))))
+   `(org-foresight-agenda-free ((,class (:foreground ,blue :slant italic))))
+   ;; The one mark that reports no decision, so the one mark with no hue: the
+   ;; other two borrow the overrun's yellow and the colour of room precisely
+   ;; because something has to be done about them.  mono6, the badges' grey --
+   ;; a step brighter than the rows it sits among, which is all a mark that
+   ;; means "nothing to resolve here" needs to be.
+   `(org-foresight-agenda-shared ((,class (:foreground ,mono6))))
+   ;; Where a row came from, not what to do about it: the same quiet grey as
+   ;; the shared mark, and the shape tells them apart.
+   `(org-foresight-agenda-arrival ((,class (:foreground ,mono6))))
+   ;; The bracket down the left edge marking the working hours.  A step below
+   ;; the marks: a mark asks for a decision and the frame asks for nothing, so
+   ;; it should be findable when looked for and invisible when not.
+   `(org-foresight-agenda-spine ((,class (:foreground ,mono5))))
+
    ;; --- Magit (Git porcelain; rich derived mode) ---
    ;; Follows design notes: "Org/Magit/Agenda and similar rich modes inherit the
    ;; font-lock and mono decisions heavily; hues only for key status indicators".
@@ -781,6 +855,66 @@ included in the 16-color export."
    `(magit-blame-hash ((,class (:foreground ,mono4))))
    `(magit-blame-name ((,class (:foreground ,mono6))))
    `(magit-blame-date ((,class (:foreground ,mono5))))
+
+   ;; --- transient ---
+   ;; Override only the faces that hard-code hex/ANSI names in their defface.
+   ;; The rest of transient's faces inherit cleanly (font-lock, shadow,
+   ;; highlight, font-lock-builtin-face) and need no entry here.
+   ;; Key colors follow rustcity semantics: stay=green (continuity),
+   ;; return=yellow (warn/route), recurse=blue (descend/link),
+   ;; stack=magenta (escalate), exit=orange (decisive leave), noop=mono4
+   ;; (shadow ramp). Box colors of the (non)standard-key faces are pinned
+   ;; to rustcity's cyan / magenta instead of vanilla ANSI cyan / magenta.
+   ;; The two suffix chips carry a hue against mono0 knockout text, which is
+   ;; the whole of the emphasis -- no weight, as everywhere else here.
+   `(transient-enabled-suffix  ((,class (:background ,green :foreground ,mono0))))
+   `(transient-disabled-suffix ((,class (:background ,red   :foreground ,mono0))))
+   `(transient-key-stay        ((,class (:foreground ,green))))
+   `(transient-key-noop        ((,class (:foreground ,mono4))))
+   `(transient-key-return      ((,class (:foreground ,yellow))))
+   `(transient-key-recurse     ((,class (:foreground ,blue))))
+   `(transient-key-stack       ((,class (:foreground ,magenta))))
+   `(transient-key-exit        ((,class (:foreground ,orange))))
+   `(transient-nonstandard-key ((,class (:box (:line-width (-1 . -1) :color ,cyan)))))
+   `(transient-mismatched-key  ((,class (:box (:line-width (-1 . -1) :color ,magenta)))))
+
+   ;; --- diff-hl / ediff ---
+   ;; Mirrors the `magit-diff-*' semantic mapping (red=removed, green=added,
+   ;; yellow=base/combined, blue=ancestor). Follows the face-spec discipline
+   ;; documented above: `:extend t' is omitted when the defface already
+   ;; supplies it (vanilla ediff-current-*/ediff-even-*/ediff-odd-* defaces
+   ;; all carry it). diff-hl renders one column in the fringe, so only
+   ;; foreground hue matters; bg/extend from the inherit chain are dropped.
+
+   ;; diff-hl
+   `(diff-hl-insert ((,class (:foreground ,green))))
+   `(diff-hl-delete ((,class (:foreground ,red))))
+   `(diff-hl-change ((,class (:foreground ,yellow))))
+
+   ;; ediff: current diff (focused chunk)
+   `(ediff-current-diff-A        ((,class (:background ,mono1 :foreground ,red))))
+   `(ediff-current-diff-B        ((,class (:background ,mono1 :foreground ,green))))
+   `(ediff-current-diff-C        ((,class (:background ,mono1 :foreground ,yellow))))
+   `(ediff-current-diff-Ancestor ((,class (:background ,mono1 :foreground ,blue))))
+
+   ;; ediff: fine diff (sub-region emphasis within a current chunk).  gensho
+   ;; marks these with weight; this theme has no weight to spend, so the plane
+   ;; does it -- mono2 against the current chunk's mono1, one step up, the same
+   ;; way `magit-diff-*-highlight' is told from `magit-diff-*' above.
+   `(ediff-fine-diff-A           ((,class (:background ,mono2 :foreground ,red))))
+   `(ediff-fine-diff-B           ((,class (:background ,mono2 :foreground ,green))))
+   `(ediff-fine-diff-C           ((,class (:background ,mono2 :foreground ,yellow))))
+   `(ediff-fine-diff-Ancestor    ((,class (:background ,mono2 :foreground ,blue))))
+
+   ;; ediff: non-current diffs (alternating markers; quiet so current wins)
+   `(ediff-even-diff-A           ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-even-diff-B           ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-even-diff-C           ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-even-diff-Ancestor    ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-odd-diff-A            ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-odd-diff-B            ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-odd-diff-C            ((,class (:background ,mono1 :foreground ,mono5))))
+   `(ediff-odd-diff-Ancestor     ((,class (:background ,mono1 :foreground ,mono5))))
 
    ;; --- Calendar / eww (other apps) ---
    `(calendar-today ((,class (:inherit font-lock-warning-face))))
