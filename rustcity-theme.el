@@ -35,6 +35,11 @@
 ;; Magit and Marginalia faces are included and follow the theme's mono ramp
 ;; + limited (but higher-pop) accents (with heavy use of :inherit) so that
 ;; highlights/headers harmonize with the neon aesthetic.
+;;
+;; Weight is used where gensho-theme uses it and nowhere else -- the two are
+;; one design read at two temperatures, and a face that is bold in one and not
+;; the other is a difference nobody asked for.  The accents carry the pop; the
+;; weight carries what the weight carried there.
 
 ;;; Code:
 
@@ -434,9 +439,9 @@ included in the 16-color export."
    `(show-paren-match ((,class (:background ,mono1 :weight bold))))
    `(link ((,class (:foreground ,blue :underline t))))
    `(link-visited ((,class (:foreground ,purple :underline t))))
-   `(error ((,class (:foreground ,red))))
-   `(warning ((,class (:foreground ,yellow))))
-   `(success ((,class (:foreground ,green))))
+   `(error ((,class (:foreground ,red :weight bold))))
+   `(warning ((,class (:foreground ,yellow :weight bold))))
+   `(success ((,class (:foreground ,green :weight bold))))
    `(minibuffer-prompt ((,class (:foreground ,mono6))))
    `(minibuffer-nonselected ((,class (:foreground ,mono0 :background ,yellow))))
    `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
@@ -466,12 +471,12 @@ included in the 16-color export."
    ;; de-facto (inactive chrome is distinct from both main content and the
    ;; dim content bg).
    `(mode-line-inactive ((,class (:foreground ,mono6 :background ,mono1))))
-   `(mode-line-buffer-id ((,class (:weight unspecified))))
+   `(mode-line-buffer-id ((,class (:weight bold))))
    ;; mode-line-highlight: minimalist convention (Nord, Doom) -- replace the
    ;; defface flat box on mouse-over with a plane shift (inherit `highlight'),
    ;; matching the "no boxes; bg-plane carries affordance" attribute policy.
    `(mode-line-highlight ((,class (:inherit highlight))))
-   `(header-line ((,class (:foreground ,mono6 :background ,mono3 :weight unspecified))))
+   `(header-line ((,class (:foreground ,mono6 :background ,mono3))))
    `(tab-bar ((,class (:foreground ,mono7 :background ,mono2))))
    `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
    ;; tab inactive tabs sit "below" the bar (mono2) using mono1. This is a
@@ -541,10 +546,10 @@ included in the 16-color export."
 
    ;; --- Completion & narrowing (modern UIs) ---
    `(vertico-current ((,class (:background ,mono1))))
-   `(orderless-match-face-0 ((,class (:weight unspecified :foreground ,orange))))
-   `(orderless-match-face-1 ((,class (:weight unspecified :foreground ,magenta))))
-   `(orderless-match-face-2 ((,class (:weight unspecified :foreground ,green))))
-   `(orderless-match-face-3 ((,class (:weight unspecified :foreground ,red))))
+   `(orderless-match-face-0 ((,class (:foreground ,orange))))
+   `(orderless-match-face-1 ((,class (:foreground ,magenta))))
+   `(orderless-match-face-2 ((,class (:foreground ,green))))
+   `(orderless-match-face-3 ((,class (:foreground ,red))))
    `(consult-buffer ((,class (:foreground ,mono6))))
    `(consult-file ((,class (:foreground ,mono5))))
    `(corfu-default ((,class (:background ,mono1))))
@@ -629,10 +634,10 @@ included in the 16-color export."
    ;; to the file-perm liveliness problem.
 
    ;; --- Dev tools (eglot, compilation, ein) ---
-   `(eglot-mode-line ((,class (:weight unspecified))))
-   `(compilation-info ((,class (:weight unspecified))))
-   `(compilation-mode-line-fail ((,class (:weight unspecified))))
-   `(compilation-mode-line-exit ((,class (:weight unspecified))))
+   `(eglot-mode-line ((,class (nil))))
+   `(compilation-info ((,class (nil))))
+   `(compilation-mode-line-fail ((,class (nil))))
+   `(compilation-mode-line-exit ((,class (nil))))
 
    ;; --- Evil / vim-emulation ---
    `(evil-snipe-first-match-face ((,class (:background ,mono3))))
@@ -649,7 +654,7 @@ included in the 16-color export."
 
    ;; --- Org mode + extensions (rich derived faces) ---
    ;; Document
-   `(org-document-title ((,class (:foreground ,mono7))))
+   `(org-document-title ((,class (:foreground ,mono7 :weight bold))))
    `(org-document-info ((,class (:foreground ,mono6))))
 
    ;; TODO / DONE
@@ -671,7 +676,7 @@ included in the 16-color export."
    `(org-table-header ((,class (:foreground ,mono7 :background ,mono2))))
    `(org-column ((,class (:foreground ,mono7 :background ,mono2))))
    `(org-column-title ((,class (:foreground ,mono7 :background ,mono2))))
-   `(org-tag ((,class (:weight unspecified))))
+   `(org-tag ((,class (:weight bold))))
 
    ;; Timestamps / dates
    `(org-time-stamp ((,class (:foreground ,mono5))))
@@ -693,8 +698,8 @@ included in the 16-color export."
    ;; here, the green above.  A different colour would make the same moment
    ;; look like two things depending on which of them drew it.
    `(org-agenda-current-time ((,class (:foreground ,green))))
-   `(org-agenda-date-today ((,class (:foreground ,mono6))))
-   `(org-agenda-date-weekend ((,class (:foreground ,mono4))))
+   `(org-agenda-date-today ((,class (:foreground ,mono6 :weight bold))))
+   `(org-agenda-date-weekend ((,class (:foreground ,mono4 :weight bold))))
    `(org-agenda-clocking ((,class (:slant italic))))
    `(org-time-grid ((,class (:inherit font-lock-comment-face))))
 
@@ -717,22 +722,22 @@ included in the 16-color export."
    ;; Other org (low-frequency)
    `(org-clock-overlay ((,class (:foreground ,mono7 :background ,mono2))))
    `(org-mode-line-clock-overrun ((,class (:foreground ,mono0 :background ,red))))
-   `(org-dispatcher-highlight ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-dispatcher-highlight ((,class (:foreground ,mono7 :background ,mono2 :weight bold))))
    `(org-latex-and-related ((,class (:foreground ,mono5))))
    `(org-agenda-restriction-lock ((,class (:foreground ,mono7 :background ,mono2))))
 
    ;; Extensions (org-around packages)
    `(org-roam-header-line ((,class (:inherit header-line))))
-   `(org-noter-notes-exist-face ((,class (:foreground ,mono6))))
-   `(org-noter-no-notes-exist-face ((,class (:foreground ,mono5))))
-   `(deft-header-face ((,class (:inherit font-lock-builtin-face))))
-   `(deft-title-face ((,class (:inherit font-lock-constant-face))))
+   `(org-noter-notes-exist-face ((,class (:foreground ,mono6 :weight bold))))
+   `(org-noter-no-notes-exist-face ((,class (:foreground ,mono5 :weight bold))))
+   `(deft-header-face ((,class (:inherit font-lock-builtin-face :weight bold))))
+   `(deft-title-face ((,class (:inherit font-lock-constant-face :weight bold))))
 
    ;; org-dayflow -- timeline column chrome on the mono/dim ramp (not raw gray20).
    ;; Weekend bands must stay one step above mono0 so they read as texture, not
    ;; as a second UI layer; dim0 sits between mono0 and mono1 for that purpose.
    `(org-dayflow-weekend-column-face ((,class (:background ,dim0 :extend t))))
-   `(org-dayflow-weekend-face ((,class (:foreground ,mono4))))
+   `(org-dayflow-weekend-face ((,class (:foreground ,mono4 :weight bold))))
    `(org-dayflow-weekday-face ((,class (:foreground ,mono5))))
    `(org-dayflow-units-face ((,class (:foreground ,mono5))))
    `(org-dayflow-label-face ((,class (:foreground ,mono5))))
@@ -759,9 +764,7 @@ included in the 16-color export."
    `(org-foresight-report-spare ((,class (:foreground ,blue))))
    ;; Emptiness, wherever it is drawn: the same dot in the bar and in the
    ;; sparkline, so two identical characters stop looking like two sizes.
-   ;; gensho reaches for weight here; this theme does not have that register --
-   ;; a step of the ramp is what tells the dot from the blocks beside it.
-   `(org-foresight-report-empty ((,class (:foreground ,mono4))))
+   `(org-foresight-report-empty ((,class (:foreground ,mono4 :weight bold))))
    `(org-foresight-report-private ((,class (:foreground ,green))))
    ;; The reserve keeps the package's outline in the overrun's own yellow: it
    ;; is the last thing between the day and an overrun, so spending it is
@@ -865,10 +868,8 @@ included in the 16-color export."
    ;; stack=magenta (escalate), exit=orange (decisive leave), noop=mono4
    ;; (shadow ramp). Box colors of the (non)standard-key faces are pinned
    ;; to rustcity's cyan / magenta instead of vanilla ANSI cyan / magenta.
-   ;; The two suffix chips carry a hue against mono0 knockout text, which is
-   ;; the whole of the emphasis -- no weight, as everywhere else here.
-   `(transient-enabled-suffix  ((,class (:background ,green :foreground ,mono0))))
-   `(transient-disabled-suffix ((,class (:background ,red   :foreground ,mono0))))
+   `(transient-enabled-suffix  ((,class (:background ,green :foreground ,mono0 :weight bold))))
+   `(transient-disabled-suffix ((,class (:background ,red   :foreground ,mono0 :weight bold))))
    `(transient-key-stay        ((,class (:foreground ,green))))
    `(transient-key-noop        ((,class (:foreground ,mono4))))
    `(transient-key-return      ((,class (:foreground ,yellow))))
@@ -897,14 +898,13 @@ included in the 16-color export."
    `(ediff-current-diff-C        ((,class (:background ,mono1 :foreground ,yellow))))
    `(ediff-current-diff-Ancestor ((,class (:background ,mono1 :foreground ,blue))))
 
-   ;; ediff: fine diff (sub-region emphasis within a current chunk).  gensho
-   ;; marks these with weight; this theme has no weight to spend, so the plane
-   ;; does it -- mono2 against the current chunk's mono1, one step up, the same
-   ;; way `magit-diff-*-highlight' is told from `magit-diff-*' above.
-   `(ediff-fine-diff-A           ((,class (:background ,mono2 :foreground ,red))))
-   `(ediff-fine-diff-B           ((,class (:background ,mono2 :foreground ,green))))
-   `(ediff-fine-diff-C           ((,class (:background ,mono2 :foreground ,yellow))))
-   `(ediff-fine-diff-Ancestor    ((,class (:background ,mono2 :foreground ,blue))))
+   ;; ediff: fine diff (sub-region emphasis within current; bold is our marker,
+   ;; on mono2 against the current chunk's mono1 -- the same step that already
+   ;; tells `magit-diff-*-highlight' from `magit-diff-*' above)
+   `(ediff-fine-diff-A           ((,class (:background ,mono2 :foreground ,red :weight bold))))
+   `(ediff-fine-diff-B           ((,class (:background ,mono2 :foreground ,green :weight bold))))
+   `(ediff-fine-diff-C           ((,class (:background ,mono2 :foreground ,yellow :weight bold))))
+   `(ediff-fine-diff-Ancestor    ((,class (:background ,mono2 :foreground ,blue :weight bold))))
 
    ;; ediff: non-current diffs (alternating markers; quiet so current wins)
    `(ediff-even-diff-A           ((,class (:background ,mono1 :foreground ,mono5))))
@@ -921,7 +921,7 @@ included in the 16-color export."
    `(calendar-weekend-header ((,class (:inherit font-lock-type-face))))
    `(holiday ((,class (:background ,mono2))))
    `(diary ((,class (:inherit font-lock-string-face))))
-   `(eww-valid-certificate ((,class (:weight unspecified :foreground ,mono6))))
+   `(eww-valid-certificate ((,class (:weight bold :foreground ,mono6))))
 
    ;; --- org-timeblock (calendar day/week time blocks) ---
    ;; Block palette maps to the theme's hues with mono0 knockout text; the hour
