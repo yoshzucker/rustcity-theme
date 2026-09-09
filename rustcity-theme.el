@@ -280,6 +280,92 @@ included in the 16-color export."
   ;; See the "Gutter, dividers..." section below and README for the current
   ;; practical choices and usage notes (including how to enable the two modes).
 
+  ;; Chrome direction -- walled / sunken / ha-ha
+  ;; (garden architecture metaphor)
+  ;;
+  ;; Three patterns coexist for chrome elements (mode-line, tab-bar,
+  ;; tab-line) that sit alongside the body.  The metaphor comes from
+  ;; garden architecture: the "garden floor" is body bg (the active
+  ;; editing surface) and the surroundings are chrome bg.
+  ;;
+  ;;   Walled: active chrome FAR from body in the fg direction (tall
+  ;;     wall); inactive chrome closer to body.  The active focus
+  ;;     area is surrounded by tall walls that make it stand out.
+  ;;
+  ;;   Sunken: active chrome at body level; inactive chrome moves
+  ;;     slightly TOWARD fg from body.  The active focused window
+  ;;     reads as the sunken floor; inactive surroundings rise as
+  ;;     walls on the fg-facing side.
+  ;;
+  ;;   Ha-ha (sunken fence): active chrome at or near body level;
+  ;;     inactive chrome moves AWAY FROM fg from body (into a ditch
+  ;;     on the anti-fg side).  The focus area sits on garden level
+  ;;     while the surrounding chrome lies in a recessed ditch.
+  ;;
+  ;; "Toward fg" and "anti-fg" are direction-agnostic on the brightness
+  ;; ramp.  Neon has fg brighter than bg, so toward fg = brighter;
+  ;; downpour has fg darker than bg, so toward fg = darker.  The
+  ;; semantic (active position vs inactive position relative to body
+  ;; and fg) is what matters, and it is the same in both variants even
+  ;; though the absolute brightness moves the other way.
+  ;;
+  ;; Whether a theme can express all three patterns depends on its
+  ;; palette geometry: if body bg sits at an extreme of the ramp
+  ;; (e.g. pure white in Modus operandi, pure black in Modus vivendi),
+  ;; the anti-fg direction has no palette room, so ha-ha is not
+  ;; available -- only walled or sunken.  Rustcity keeps mono0 off the
+  ;; extremes in both variants, so all three are open to it.
+  ;;
+  ;; Survey (source inspection, body-distance + fg-direction analysis):
+  ;;
+  ;;   Theme               | mode-line | tab-bar
+  ;;   --------------------+-----------+--------
+  ;;   Modus operandi/viv. | walled    | sunken
+  ;;   Catppuccin mocha    | ha-ha     | walled
+  ;;   Catppuccin latte    | sunken    | walled
+  ;;   Doom one dark       | ha-ha     | ha-ha
+  ;;   Doom one light      | sunken    | sunken
+  ;;
+  ;; All three patterns are in active use.  The same design intent
+  ;; can classify differently between a theme's light and dark
+  ;; variants (Doom one and Catppuccin's mode-line) because the bg/fg
+  ;; direction flips while the chrome's palette direction stays
+  ;; fixed.  Themes with body bg at a brightness extreme (Modus) can
+  ;; only express walled or sunken (no ha-ha possible).
+  ;;
+  ;; The pattern interacts with the theme's "dim direction" -- where
+  ;; body bg shifts when a non-active window is dimmed (by solaire /
+  ;; auto-dim-other-buffers, or any equivalent mode), and whether
+  ;; that direction is toward fg or anti-fg:
+  ;;
+  ;;   - dim toward fg: sunken keeps all "active" elements (body,
+  ;;     mode-line, selected tab) at the same body-bg stratum, with
+  ;;     dim'd bodies and inactive chrome rising slightly toward fg as
+  ;;     a coherent unit.  Walled or ha-ha would split "active" across
+  ;;     strata.
+  ;;
+  ;;   - dim anti-fg: active body sits on the fg side of dim'd body.
+  ;;     Walled or ha-ha (active chrome aligned with active body)
+  ;;     would keep "active" coherent; sunken would split it.
+  ;;
+  ;; This is orthogonal to whether any dimming mode is actually
+  ;; enabled -- the principle applies to the static palette geometry.
+  ;;
+  ;; This theme commits to fully sunken: `mode-line', `tab-bar-tab'
+  ;; and `tab-line-tab-current' bg = mono0 (= active body).  The
+  ;; active window's chrome is visually flush with the editing
+  ;; surface; the inactive window gets a visible mono1 bar.  Among
+  ;; surveyed themes, the closest match is Doom one light (also
+  ;; fully sunken).
+  ;;
+  ;; Rustcity commits to sunken because its dim direction is "toward
+  ;; fg" in both variants: neon mono0 -> dim0 is brighter and neon has
+  ;; fg above bg, downpour mono0 -> dim0 is darker and downpour has fg
+  ;; below bg.  Sunken keeps all "active" elements bottoming out at
+  ;; one stratum.  Aesthetically, chrome at body level leaves the lit
+  ;; accents -- signage hues on a flush dark street -- as the only
+  ;; things standing above the plane.
+
   ;; Accent colors (hues)
   ;;
   ;; A. Observed convergence on semantic mappings
@@ -397,6 +483,168 @@ included in the 16-color export."
   ;; the extensive mono usage apply the general patterns (A-D) + this
   ;; higher-pop choice.
 
+  ;; Face spec discipline (Emacs `face-spec-recalc' behavior)
+  ;;
+  ;; When `custom-theme-set-faces' overrides a face, the override does NOT
+  ;; merge with the face's defface. `face-spec-recalc' first resets every
+  ;; attribute to `unspecified', then applies the theme spec on top. The
+  ;; defface spec is consulted only when no theme entry matches.
+  ;;
+  ;; The single exception is `:extend': if the theme spec leaves it
+  ;; unspecified, `face-spec-recalc' copies the value from defface. So
+  ;; `:extend' is the only attribute the theme can omit and still get the
+  ;; defface value.
+  ;;
+  ;; (`set-face-attribute' is a different, lower-level primitive with true
+  ;; merge semantics -- only the listed attributes change. The theme path
+  ;; goes through `face-spec-recalc' and does NOT have those semantics.)
+  ;;
+  ;; Consequence for rustcity: for any attribute other than `:extend' that
+  ;; the defface specifies and we want to preserve, we must restate it
+  ;; explicitly. Omitting it means dropping it. So:
+  ;;   - `:extend'        -> omit (Emacs preserves the defface value).
+  ;;   - everything else  -> state explicitly if we want it; omit only when
+  ;;                         we actively want it cleared.
+
+  ;; Decoration attribute policy (survey-derived; same structure as the
+  ;; mono ramp / accent design notes above: facts -> pattern -> rustcity
+  ;; choice).
+  ;;
+  ;; Big-picture philosophy.  Modern minimalist themes (Nord, Modus,
+  ;; Catppuccin) carry visual structure through a perceptual mono ramp
+  ;; (~8 steps) and adjacent bg planes; borders are removed or flattened.
+  ;; Information that the plane painting cannot carry (interactivity,
+  ;; diagnostics, hierarchy, state) is delegated to color accents and --
+  ;; only where the plane is insufficient -- to text-decoration
+  ;; attributes.  Heavier themes (Zenburn, doom-themes) keep older
+  ;; decoration conventions (released-button 3D box, broad straight-
+  ;; underline usage, frequent inverse-video).  Rustcity follows the
+  ;; minimalist line on every attribute below.  Its higher-pop strategy
+  ;; (see B above) spends itself on hue, not on decoration.
+  ;;
+  ;; :underline t
+  ;;   Survey: minimalist themes confine straight underline to (a)
+  ;;   actionable navigation (`link', `link-visited').  Wave-style
+  ;;   underline for diagnostics (flyspell/flycheck) is a separate
+  ;;   built-in convention shared by all themes.  Heavier themes
+  ;;   additionally underline dates, references, document-structure
+  ;;   markers and "intra-mono distinction" cases such as dired
+  ;;   permission chars; minimalist themes do NOT (Nord, Catppuccin,
+  ;;   Modus do not override `dired-perm-write' / `marginalia-file-
+  ;;   priv-*' to add underline).  Rustcity choice: minimalist.
+  ;;   Allowed:
+  ;;     (a) navigation: `link', `link-visited'.
+  ;;     (b) defface-provided straight underline that other minimalist
+  ;;         themes also let stand (they don't override): `calendar-
+  ;;         today' (defface has `:underline t', conventional today
+  ;;         marker -- we restate it to survive the theme replace).
+  ;;     (c) wave-style diagnostics (override flyspell/flycheck etc.
+  ;;         when needed -- keeps the built-in convention).
+  ;;   NOT allowed (do not restate defface underline, do not invent
+  ;;   intra-mono underline): document text and heading decoration --
+  ;;   `org-date', `org-footnote', `org-ellipsis', `org-column-title',
+  ;;   `org-latex-and-related', `eww-valid-certificate', font-lock
+  ;;   tty-fallback underlines; and intra-mono distinction faces --
+  ;;   `dired-perm-write', `marginalia-file-priv-write', where weight
+  ;;   and slant carry the distinction instead.
+  ;;
+  ;; :weight bold
+  ;;   Survey: all themes use bold for hierarchy/structural prominence
+  ;;   (headings, outline levels) and state indicators (error/warning/
+  ;;   success).  Minimalist themes (Modus) gate it behind a user
+  ;;   toggle and default to "only where necessary"; heavier themes
+  ;;   additionally bold every font-lock keyword/function-name/type.
+  ;;   Rustcity choice: minimalist.  Bold for exactly two roles:
+  ;;     (1) Hierarchy / structural prominence -- headings where the
+  ;;         bg plane alone cannot carry the body/heading split
+  ;;         (`org-document-title', the magit-section-heading and
+  ;;         magit-diff-file-heading families, `deft-*',
+  ;;         `line-number-current-line', the current tab group and
+  ;;         modified tab).
+  ;;     (2) State indicators on low-cardinality markers (`error',
+  ;;         `warning', `success', `mode-line-buffer-id', `org-tag',
+  ;;         the org-agenda date/time markers, the magit process,
+  ;;         tag and branch markers, `show-paren-match').
+  ;;   No bold on syntax (font-lock-keyword-face etc.) -- color alone
+  ;;   carries the semantic, and in neon the color is loud enough that
+  ;;   bold on top would be noise.  When defface has bold but rustcity
+  ;;   wants to drop it (high-frequency dense markers like `orderless-
+  ;;   match-face-*'; chrome neutrals like `header-line'), simply omit
+  ;;   `:weight' from the override -- theme replace makes it
+  ;;   unspecified automatically.
+  ;;
+  ;; :box
+  ;;   Survey: sparse in all themes (8-45 entries).  Heavier themes
+  ;;   (Zenburn) use `:style released-button' on mode-line / headers
+  ;;   (legacy 3D look); minimalist themes (Nord, Catppuccin) confine
+  ;;   `:box' to clickable affordances with flat `:line-width N :color X'.
+  ;;   Rustcity choice: minimalist.  `:box' only where the bg plane
+  ;;   alone cannot carry the affordance:
+  ;;     - `magit-branch-current' (`:box t' delimits the current
+  ;;       branch among a list of branches).
+  ;;     - `magit-blame-heading' (sized box frames the blame line).
+  ;;     - `transient-nonstandard-key' / `transient-mismatched-key'
+  ;;       (a negative-width hue box marks the odd key without moving
+  ;;       any text).
+  ;;   Otherwise the affordance rides the bg plane (e.g.
+  ;;   `help-key-binding' renders the key chip as a `mono2' fill on the
+  ;;   `mono0' body plane -- the step is enough, no box is added).
+  ;;   No `:style released-button' anywhere.
+  ;;
+  ;; :slant italic
+  ;;   Survey: all themes use italic for secondary/de-emphasized
+  ;;   content (comments, docstrings, blockquotes, citations).
+  ;;   Italic is gentler than bold and does not impede plane reading;
+  ;;   even minimalist themes use it readily.  Rustcity follows the
+  ;;   common pattern.  Used on: `font-lock-comment-face',
+  ;;   `marginalia-file-priv-link', `magit-branch-upstream',
+  ;;   `org-agenda-clocking', `org-agenda-date-today' (with bold),
+  ;;   `org-foresight-agenda-derived' and
+  ;;   `org-foresight-agenda-free' (both of which mark an entry the
+  ;;   user did not write themselves).
+  ;;
+  ;; :inverse-video
+  ;;   Survey: minimalist themes (Nord 0, Catppuccin tty fallback only,
+  ;;   Modus sparse) avoid it; heavier themes (Doom, Zenburn) use it
+  ;;   sparsely.  Reason for avoiding: explicit bg/fg pairs are more
+  ;;   predictable and interact more cleanly with the mono-ramp planes.
+  ;;   Rustcity choice: never use `:inverse-video'.  Where defface has
+  ;;   it (`org-todo', `org-done', `org-date-selected'), rustcity writes
+  ;;   the equivalent display as an explicit `:foreground' / `:background'
+  ;;   pair (theme replace drops the defface inverse-video for free).
+  ;;
+  ;; :inherit (not a decoration but related)
+  ;;   When defface `:inherit' aligns with rustcity intent, RESTATE it
+  ;;   explicitly (theme override replaces defface, so omitted inherit
+  ;;   is dropped).  When defface `:inherit' conflicts, re-target it
+  ;;   (e.g. `dired-directory' -> `font-lock-type-face', `font-lock-
+  ;;   doc-face' -> `mono4').
+  ;;
+  ;; Typeface
+  ;;   Families are the user's to choose, so the theme states color and
+  ;;   never `:family'.  `fixed-pitch' and `variable-pitch' are left to
+  ;;   their defface entirely; faces that must be monospaced regardless
+  ;;   of what the surrounding text uses say so by inheriting
+  ;;   `fixed-pitch' (`tooltip', `help-key-binding').
+  ;;
+  ;; Face-stack defence reset (`:weight normal :slant normal')
+  ;;   Defface sometimes places an explicit normal-reset to prevent
+  ;;   weight/slant inheriting from the face stack below (overlay
+  ;;   before-string, text under another face's region).  Rustcity
+  ;;   preserves the reset only where the inheritance path exists:
+  ;;   `magit-blame-heading' (before-string overlay; magit source
+  ;;   comments on the inheritance risk), `org-column' (drawn atop
+  ;;   underlying buffer text).  Margin overlays and independent
+  ;;   regions do NOT need it -- `magit-log-author' / `magit-log-date'
+  ;;   live in the margin overlay so the reset is omitted.
+  ;;
+  ;; No explicit `:foo unspecified'
+  ;;   Theme override replaces defface entirely, so omitting an
+  ;;   attribute IS unspecified.  Writing `:foo unspecified' carries
+  ;;   no functional effect; the documentation value is covered by
+  ;;   this block.  We therefore do not write any `:foo unspecified'
+  ;;   in the spec list below.
+
   (custom-theme-set-faces
    'rustcity
 
@@ -419,8 +667,6 @@ included in the 16-color export."
 
    ;; --- Core primitives ---
    `(default ((,class (:foreground ,mono7 :background ,mono0))))
-   `(fixed-pitch ((,class (:family unspecified))))
-   `(variable-pitch ((,class (:family unspecified))))
    `(cursor ((,class (:background ,mono6))))
    `(fringe ((,class (:background ,mono0))))
    `(border ((,class (:background ,mono0))))
@@ -444,7 +690,7 @@ included in the 16-color export."
    ;; your personal config; the panel character will come from its distinct
    ;; content, hl-line, and the clean divider treatment.
    `(vertical-border ((,class (:foreground ,mono0))))
-   `(region ((,class (:background ,mono1 :extend t))))
+   `(region ((,class (:background ,mono1))))
    `(secondary-selection ((,class (:background ,mono2))))
    `(highlight ((,class (:background ,mono1))))
    `(shadow ((,class (:foreground ,mono4))))
@@ -457,8 +703,16 @@ included in the 16-color export."
    `(success ((,class (:foreground ,green :weight bold))))
    `(minibuffer-prompt ((,class (:foreground ,mono6))))
    `(minibuffer-nonselected ((,class (:foreground ,mono0 :background ,yellow))))
-   `(tooltip ((,class (:foreground ,mono7 :background ,orange))))
-   `(help-key-binding ((,class (:foreground ,mono7 :background ,mono2 :box unspecified))))
+   ;; A tooltip is chrome, not a signal: it appears because the pointer
+   ;; happened to rest somewhere, and an accent plane makes that read as an
+   ;; alert.  The neutral chrome step is what the minimalist tooltip pattern
+   ;; uses (Doom, Catppuccin), and gensho settled there for the same reason.
+   ;; The fixed face is explicit because Emacs's own definition of `tooltip'
+   ;; inherits `variable-pitch', which puts a proportional face in front of
+   ;; somebody whose every other window is monospaced -- and key bindings,
+   ;; signatures and paths are read by their columns.
+   `(tooltip ((,class (:foreground ,mono7 :background ,mono2 :inherit fixed-pitch))))
+   `(help-key-binding ((,class (:foreground ,mono7 :background ,mono2 :inherit fixed-pitch))))
 
    ;; --- Modeline, header-line, tab-bar, tab-line (UI chrome) ---
    ;; Layered chrome strategy: We differentiate "chrome layers" (bars, side
@@ -474,15 +728,20 @@ included in the 16-color export."
    ;;   distinction.
    ;; - tab-line (per-window) follows a similar but slightly more content-adjacent
    ;;   layering (bar at mono1) since it lives closer to buffer content.
-   ;; - mode-line already uses mono2 (active chrome) and mono1 (inactive),
-   ;;   harmonizing with the new tab-bar top bar.
-   `(mode-line ((,class (:foreground ,mono7 :background ,mono2))))
-   ;; mode-line-inactive stays at mono1: this is chrome-layer "inactive" treatment
-   ;; (one step below active chrome at mono2). It is not a content subtle bg.
-   ;; When a window is dimmed by the supported modes the mode-line itself may
-   ;; still be remapped or left, but the layer distinction is preserved per
-   ;; de-facto (inactive chrome is distinct from both main content and the
-   ;; dim content bg).
+   ;; - mode-line uses mono0 (active = body level) and mono1 (inactive),
+   ;;   matching tab-bar's sunken direction.  The active mode-line is
+   ;;   visually flush with the editing surface (no bar separator);
+   ;;   the inactive mode-line is the one that appears as a visible bar
+   ;;   (mono1).
+   `(mode-line ((,class (:foreground ,mono7 :background ,mono0))))
+   ;; mode-line-inactive at mono1 -- the inactive chrome reference plane
+   ;; shared with `tab-bar-tab-inactive' and `tab-line-tab-inactive', one
+   ;; step above the deepest body stratum.  This level is invariant under
+   ;; the walled / sunken / ha-ha choice for the active mode-line (see
+   ;; "Chrome direction" notes in the mono ramp design above).  When a
+   ;; window is dimmed by the supported modes the layer distinction still
+   ;; holds: inactive chrome is distinct from both the content plane and
+   ;; the dim content bg.
    `(mode-line-inactive ((,class (:foreground ,mono6 :background ,mono1))))
    `(mode-line-buffer-id ((,class (:weight bold))))
    ;; mode-line-highlight: minimalist convention (Nord, Doom) -- replace the
@@ -491,7 +750,7 @@ included in the 16-color export."
    `(mode-line-highlight ((,class (:inherit highlight))))
    `(header-line ((,class (:foreground ,mono6 :background ,mono3))))
    `(tab-bar ((,class (:foreground ,mono7 :background ,mono2))))
-   `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
+   `(tab-bar-tab ((,class (:foreground ,mono7 :background ,mono0))))
    ;; tab inactive tabs sit "below" the bar (mono2) using mono1. This is a
    ;; chrome recess, not a content selection. Kept at mono1 for layer
    ;; coherence even with the compressed low end.
@@ -502,7 +761,7 @@ included in the 16-color export."
    ;; mono1 are chrome-adjacent.
    `(tab-line ((,class (:foreground ,mono7 :background ,mono1))))
    `(tab-line-tab ((,class (:foreground ,mono6 :background ,mono1))))
-   `(tab-line-tab-current ((,class (:foreground ,mono7 :background ,mono0 :box unspecified))))
+   `(tab-line-tab-current ((,class (:foreground ,mono7 :background ,mono0))))
    `(tab-line-tab-inactive ((,class (:foreground ,mono5 :background ,mono1))))
    `(tab-line-tab-modified ((,class (:inherit tab-line-tab-current :weight bold))))
 
@@ -572,10 +831,25 @@ included in the 16-color export."
 
    ;; --- Navigation & project (dired, bookmark, etc.) ---
    `(dired-directory ((,class (:inherit font-lock-type-face))))
-   `(dired-perm-write ((,class (:foreground ,mono4 :underline t))))
-   `(bookmark-face ((,class (:foreground ,mono5 :distant-foreground ,mono5 :background unspecified))))
+   `(dired-perm-write ((,class (:foreground ,mono4))))
+   ;; dired-subtree hard-codes six backgrounds of its own, a teal-tinted dark
+   ;; ramp that belongs to no theme -- and to a light variant, nothing at all.
+   ;; It asks for six background planes; the ramp has two below chrome (mono0
+   ;; for content, mono1 for the subtle step on top of it), and spending mono2
+   ;; or mono3 here would put a file listing at tab-bar brightness.  So the
+   ;; background carries the one thing it is needed for -- where an expanded
+   ;; block begins and ends -- and the two planes alternate: each nesting sits
+   ;; on the other plane from the block holding it.  How deep a row is, is
+   ;; already said by the indentation.
+   `(dired-subtree-depth-1-face ((,class (:background ,mono1))))
+   `(dired-subtree-depth-2-face ((,class (:background ,mono0))))
+   `(dired-subtree-depth-3-face ((,class (:background ,mono1))))
+   `(dired-subtree-depth-4-face ((,class (:background ,mono0))))
+   `(dired-subtree-depth-5-face ((,class (:background ,mono1))))
+   `(dired-subtree-depth-6-face ((,class (:background ,mono0))))
+   `(bookmark-face ((,class (:foreground ,mono5 :distant-foreground ,mono5))))
    `(deadgrep-filename-face ((,class (:inherit font-lock-builtin-face))))
-   `(treemacs-root-face ((,class (:height unspecified))))
+   `(treemacs-root-face ((,class (:inherit font-lock-constant-face))))
    ;; Sidebar slab: give the whole treemacs window a distinct layer (mono1)
    ;; so it reads as a side panel next to the main content plane (mono0).
    ;; With `vertical-border` at mono0, the transition is clean (no extra seam
@@ -619,8 +893,12 @@ included in the 16-color export."
    ;; All marginalia-file-priv-* now use the shadow family for visual
    ;; uniformity within the compact permission annotation string.
    ;; Weight/underline/italic provide intra-mono distinction (e.g. bold 'd'
-   ;; for dir, underline for write), consistent with the low-key
-   ;; dired-perm-write precedent (see above).  Leverages :inherit heavily
+   ;; for dir, italic for link).  Underline is intentionally NOT used
+   ;; here -- see the `:underline' decoration policy above (minimalist
+   ;; themes such as Nord, Catppuccin and Modus do not underline
+   ;; intra-mono distinction cases like `dired-perm-write' /
+   ;; `marginalia-file-priv-*'; rustcity follows that line, and the
+   ;; compact permission string stays uniform).  Leverages :inherit heavily
    ;; to respect marginalia's own face hierarchy (e.g. marginalia-size
    ;; inherits number, marginalia-file-name inherits documentation)
    ;; without touching the base font-lock-*/shadow definitions.
@@ -635,7 +913,7 @@ included in the 16-color export."
    `(marginalia-file-priv-dir ((,class (:inherit shadow :weight bold))))
    `(marginalia-file-priv-link ((,class (:inherit shadow :slant italic))))
    `(marginalia-file-priv-read ((,class (:inherit shadow))))
-   `(marginalia-file-priv-write ((,class (:inherit shadow :underline t))))
+   `(marginalia-file-priv-write ((,class (:inherit shadow))))
    `(marginalia-file-priv-exec ((,class (:inherit shadow))))
    `(marginalia-file-priv-other ((,class (:inherit shadow))))
    `(marginalia-file-priv-rare ((,class (:inherit shadow))))
@@ -647,10 +925,10 @@ included in the 16-color export."
    ;; to the file-perm liveliness problem.
 
    ;; --- Dev tools (eglot, compilation, ein) ---
-   `(eglot-mode-line ((,class (nil))))
-   `(compilation-info ((,class (nil))))
-   `(compilation-mode-line-fail ((,class (nil))))
-   `(compilation-mode-line-exit ((,class (nil))))
+   `(eglot-mode-line ((,class (:inherit mode-line))))
+   `(compilation-info ((,class (:inherit success))))
+   `(compilation-mode-line-fail ((,class (:inherit compilation-error))))
+   `(compilation-mode-line-exit ((,class (:inherit compilation-info))))
 
    ;; --- Evil / vim-emulation ---
    `(evil-snipe-first-match-face ((,class (:background ,mono3))))
@@ -671,8 +949,8 @@ included in the 16-color export."
    `(org-document-info ((,class (:foreground ,mono6))))
 
    ;; TODO / DONE
-   `(org-todo ((,class (:inverse-video t :foreground ,red :background ,mono0))))
-   `(org-done ((,class (:inverse-video t :foreground ,green :background ,mono0))))
+   `(org-todo ((,class (:foreground ,mono0 :background ,red))))
+   `(org-done ((,class (:foreground ,mono0 :background ,green))))
    `(org-headline-todo ((,class (:foreground ,mono7))))
    `(org-headline-done ((,class (:inherit font-lock-comment-face))))
    `(org-archived ((,class (:inherit org-headline-done))))
@@ -687,7 +965,7 @@ included in the 16-color export."
    ;; Tables / columns
    `(org-table ((,class (:foreground ,mono6))))
    `(org-table-header ((,class (:foreground ,mono7 :background ,mono2))))
-   `(org-column ((,class (:foreground ,mono7 :background ,mono2))))
+   `(org-column ((,class (:foreground ,mono7 :background ,mono2 :weight normal :slant normal :strike-through nil :underline nil))))
    `(org-column-title ((,class (:foreground ,mono7 :background ,mono2))))
    `(org-tag ((,class (:weight bold))))
 
@@ -695,9 +973,7 @@ included in the 16-color export."
    `(org-time-stamp ((,class (:foreground ,mono5))))
    `(org-date ((,class (:foreground ,mono5))))
    `(org-sexp-date ((,class (:foreground ,mono5))))
-   ;; org-date-selected: defface has :inverse-video t. Override with unspecified
-   ;; so bg/fg show directly (orange badge). No child face inherits this.
-   `(org-date-selected ((,class (:foreground ,mono0 :background ,orange :inverse-video unspecified))))
+   `(org-date-selected ((,class (:foreground ,mono0 :background ,orange))))
 
    ;; Formula / footnote
    `(org-formula ((,class (:foreground ,yellow))))
@@ -711,9 +987,9 @@ included in the 16-color export."
    ;; here, the green above.  A different colour would make the same moment
    ;; look like two things depending on which of them drew it.
    `(org-agenda-current-time ((,class (:foreground ,green))))
-   `(org-agenda-date-today ((,class (:foreground ,mono6 :weight bold))))
+   `(org-agenda-date-today ((,class (:foreground ,mono6 :weight bold :slant italic))))
    `(org-agenda-date-weekend ((,class (:foreground ,mono4 :weight bold))))
-   `(org-agenda-clocking ((,class (:slant italic))))
+   `(org-agenda-clocking ((,class (:slant italic :inherit secondary-selection))))
    `(org-time-grid ((,class (:inherit font-lock-comment-face))))
 
    ;; Scheduling
@@ -746,17 +1022,24 @@ included in the 16-color export."
    `(deft-header-face ((,class (:inherit font-lock-builtin-face :weight bold))))
    `(deft-title-face ((,class (:inherit font-lock-constant-face :weight bold))))
 
-   ;; org-dayflow -- timeline column chrome on the mono/dim ramp (not raw gray20).
-   ;; Weekend bands must stay one step above mono0 so they read as texture, not
-   ;; as a second UI layer; dim0 sits between mono0 and mono1 for that purpose.
-   `(org-dayflow-weekend-column-face ((,class (:background ,dim0 :extend t))))
+   ;; org-dayflow -- timeline column chrome on the mono ramp (not raw gray20).
+   ;; Three bands can land on the same column: the weekend shade, the current
+   ;; time and the cursor.  The weekend one is always there, so it takes the
+   ;; lower step (mono1, the subtle plane over content) and the two moving
+   ;; ones take the step above it (mono2, which the ramp roles above give to
+   ;; alt-subtle highlights).  Without the gap, a Saturday would swallow the
+   ;; current-time column on two days in seven.  dim0/dim1 are not candidates
+   ;; here even though they would sit lower still: those levels mean "this
+   ;; window is not the selected one" wherever solaire-mode or
+   ;; auto-dim-other-buffers is on, and a weekend is not that.
+   `(org-dayflow-weekend-column-face ((,class (:background ,mono1 :extend t))))
    `(org-dayflow-weekend-face ((,class (:foreground ,mono4 :weight bold))))
    `(org-dayflow-weekday-face ((,class (:foreground ,mono5))))
    `(org-dayflow-units-face ((,class (:foreground ,mono5))))
    `(org-dayflow-label-face ((,class (:foreground ,mono5))))
    `(org-dayflow-query-face ((,class (:inherit org-agenda-structure))))
-   `(org-dayflow-now-column-face ((,class (:background ,mono1 :extend t))))
-   `(org-dayflow-cursor-column-face ((,class (:background ,mono1 :extend t))))
+   `(org-dayflow-now-column-face ((,class (:background ,mono2 :extend t))))
+   `(org-dayflow-cursor-column-face ((,class (:background ,mono2 :extend t))))
    `(org-dayflow-now-unit-face ((,class (:inherit calendar-today))))
    `(org-dayflow-cursor-unit-face ((,class (:inherit org-date-selected))))
    `(org-dayflow-title-done-face ((,class (:inherit org-headline-done :strike-through t))))
@@ -820,28 +1103,30 @@ included in the 16-color export."
    ;; magit deffaces).  This also works well with rustcity's higher-pop
    ;; (accents will pop more due to high sat in neon variant).
    ;; Prefer :inherit + mono* over direct colors for harmony and DRY.
-   ;; :extend t for full-width lines (Emacs 27+).
-   `(magit-section-highlight ((,class (:background ,mono1 :extend t))))
+   ;; `:extend t' on diff/heading/blame bgs is supplied by defface and
+   ;; preserved by `face-spec-recalc' (see face-spec discipline notes
+   ;; above), so it is not restated here.
+   `(magit-section-highlight ((,class (:background ,mono1))))
    `(magit-section-heading ((,class (:inherit font-lock-keyword-face :weight bold))))
    `(magit-section-secondary-heading ((,class (:weight bold))))
    `(magit-section-heading-selection ((,class (:inherit magit-section-highlight :foreground ,orange :weight bold))))
    `(magit-diff-file-heading ((,class (:weight bold))))
    `(magit-diff-file-heading-highlight ((,class (:inherit magit-section-highlight :weight bold))))
    `(magit-diff-file-heading-selection ((,class (:inherit magit-diff-file-heading-highlight :foreground ,orange))))
-   `(magit-diff-hunk-heading ((,class (:background ,mono2 :foreground ,mono6 :extend t))))
-   `(magit-diff-hunk-heading-highlight ((,class (:background ,mono3 :foreground ,mono7 :extend t))))
+   `(magit-diff-hunk-heading ((,class (:background ,mono2 :foreground ,mono6))))
+   `(magit-diff-hunk-heading-highlight ((,class (:background ,mono3 :foreground ,mono7))))
    `(magit-diff-hunk-heading-selection ((,class (:inherit magit-diff-hunk-heading-highlight :foreground ,orange))))
    `(magit-diff-conflict-heading ((,class (:inherit magit-diff-hunk-heading))))
    `(magit-diff-revision-summary ((,class (:inherit magit-diff-hunk-heading))))
-   `(magit-diff-lines-heading ((,class (:background ,orange :foreground ,mono0 :extend t))))
+   `(magit-diff-lines-heading ((,class (:background ,orange :foreground ,mono0))))
    `(magit-diff-context ((,class (:foreground ,mono5))))
-   `(magit-diff-context-highlight ((,class (:background ,mono1 :foreground ,mono6 :extend t))))
-   `(magit-diff-added ((,class (:background ,mono1 :foreground ,green :extend t))))
-   `(magit-diff-added-highlight ((,class (:background ,mono2 :foreground ,green :extend t))))
-   `(magit-diff-removed ((,class (:background ,mono1 :foreground ,red :extend t))))
-   `(magit-diff-removed-highlight ((,class (:background ,mono2 :foreground ,red :extend t))))
-   `(magit-diff-base ((,class (:background ,mono1 :foreground ,yellow :extend t))))
-   `(magit-diff-base-highlight ((,class (:background ,mono2 :foreground ,yellow :extend t))))
+   `(magit-diff-context-highlight ((,class (:background ,mono1 :foreground ,mono6))))
+   `(magit-diff-added ((,class (:background ,mono1 :foreground ,green))))
+   `(magit-diff-added-highlight ((,class (:background ,mono2 :foreground ,green))))
+   `(magit-diff-removed ((,class (:background ,mono1 :foreground ,red))))
+   `(magit-diff-removed-highlight ((,class (:background ,mono2 :foreground ,red))))
+   `(magit-diff-base ((,class (:background ,mono1 :foreground ,yellow))))
+   `(magit-diff-base-highlight ((,class (:background ,mono2 :foreground ,yellow))))
    `(magit-diff-our ((,class (:inherit magit-diff-removed))))
    `(magit-diff-their ((,class (:inherit magit-diff-added))))
    `(magit-diff-our-highlight ((,class (:inherit magit-diff-removed-highlight))))
@@ -864,8 +1149,9 @@ included in the 16-color export."
    `(magit-refname ((,class (:foreground ,mono5))))
    `(magit-keyword ((,class (:inherit font-lock-string-face))))
    `(magit-keyword-squash ((,class (:inherit font-lock-warning-face))))
-   `(magit-blame-highlight ((,class (:background ,mono2 :extend t))))
-   `(magit-blame-heading ((,class (:background ,mono2 :foreground ,mono6 :extend t
+   `(magit-blame-highlight ((,class (:background ,mono2))))
+   `(magit-blame-heading ((,class (:background ,mono2 :foreground ,mono6
+                                               :weight normal :slant normal
                                                :box (:color ,mono2 :line-width 2)))))
    `(magit-blame-summary ((,class (:foreground ,mono7))))
    `(magit-blame-hash ((,class (:foreground ,mono4))))
@@ -930,7 +1216,7 @@ included in the 16-color export."
    `(ediff-odd-diff-Ancestor     ((,class (:background ,mono1 :foreground ,mono5))))
 
    ;; --- Calendar / eww (other apps) ---
-   `(calendar-today ((,class (:inherit font-lock-warning-face))))
+   `(calendar-today ((,class (:inherit font-lock-warning-face :underline t))))
    `(calendar-weekend-header ((,class (:inherit font-lock-type-face))))
    `(holiday ((,class (:background ,mono2))))
    `(diary ((,class (:inherit font-lock-string-face))))
