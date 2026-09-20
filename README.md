@@ -95,24 +95,24 @@ No colors outside the published structure are used.
 Example JSON (via `rustcity-export-palette 'json 'neon`):
 ```json
 {
-  "background": "#253058",
-  "foreground": "#8995d1",
-  "black": "#192141",
-  "brightblack": "#323f71",
-  "brightgreen": "#3f4e8b",
-  "brightyellow": "#4c5ea6",
-  "brightblue": "#5c6fbe",
-  "white": "#7282c8",
-  "brightwhite": "#8995d1",
-  "red": "#fe608a",
-  "brightred": "#ee7700",
-  "yellow": "#b19600",
-  "green": "#73a700",
-  "cyan": "#00a9b1",
-  "brightcyan": "#00a9b1",
-  "blue": "#359bff",
-  "brightmagenta": "#b57cff",
-  "magenta": "#fe3ef8"
+  "background": "#192141",
+  "foreground": "#8692d0",
+  "black": "#0c1227",
+  "brightblack": "#27325c",
+  "brightgreen": "#354379",
+  "brightyellow": "#455596",
+  "brightblue": "#5468b6",
+  "white": "#6c7dc6",
+  "brightwhite": "#8692d0",
+  "red": "#fe5a87",
+  "brightred": "#ea7500",
+  "yellow": "#ae9400",
+  "green": "#71a400",
+  "cyan": "#00a6ae",
+  "brightcyan": "#00a6ae",
+  "blue": "#2698ff",
+  "brightmagenta": "#b478ff",
+  "magenta": "#fe32f8"
 }
 ```
 
@@ -122,22 +122,22 @@ Example JSON (via `rustcity-export-palette 'json 'neon`):
 
 | Role / ANSI key     | Internal key | neon (dark) | downpour (light) |
 |---------------------|--------------|-------------|------------------|
-| black               | mono0        | #192141     | #d5d6df          |
-| background          | mono1        | #253058     | #c0c3d0          |
-| brightblack         | mono2        | #323f71     | #acafc1          |
-| brightgreen         | mono3        | #3f4e8b     | #999cb2          |
-| brightyellow        | mono4        | #4c5ea6     | #858aa3          |
-| brightblue          | mono5        | #5c6fbe     | #737894          |
-| white               | mono6        | #7282c8     | #616682          |
-| foreground, brightwhite | mono7    | #8995d1     | #51556d          |
-| red                 | red          | #fe608a     | #fe3276          |
-| brightred           | orange       | #ee7700     | #d76a00          |
-| yellow              | yellow       | #b19600     | #9f8700          |
-| green               | green        | #73a700     | #679600          |
-| cyan, brightcyan    | cyan         | #00a9b1     | #00979f          |
-| blue                | blue         | #359bff     | #008bee          |
-| brightmagenta       | purple       | #b57cff     | #ac62ff          |
-| magenta             | magenta      | #fe3ef8     | #f200eb          |
+| black               | mono0        | #0c1227     | #ededf1          |
+| background          | mono1        | #192141     | #d5d6df          |
+| brightblack         | mono2        | #27325c     | #bec0cd          |
+| brightgreen         | mono3        | #354379     | #a7aabc          |
+| brightyellow        | mono4        | #455596     | #9094ac          |
+| brightblue          | mono5        | #5468b6     | #7b7f9b          |
+| white               | mono6        | #6c7dc6     | #666b88          |
+| foreground, brightwhite | mono7    | #8692d0     | #535870          |
+| red                 | red          | #fe5a87     | #fc006d          |
+| brightred           | orange       | #ea7500     | #cb6400          |
+| yellow              | yellow       | #ae9400     | #967f00          |
+| green               | green        | #71a400     | #618e00          |
+| cyan, brightcyan    | cyan         | #00a6ae     | #008f96          |
+| blue                | blue         | #2698ff     | #0083e1          |
+| brightmagenta       | purple       | #b478ff     | #a754ff          |
+| magenta             | magenta      | #fe32f8     | #e500de          |
 
 The grey rows are in ramp order: `mono0` lies outside the background, away from
 the foreground, and each `bright` slot is lighter than the plain one of the same
