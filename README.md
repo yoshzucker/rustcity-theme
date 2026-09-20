@@ -48,14 +48,13 @@ After loading the package (or the theme), the palette is available in two ways:
   (rustcity-palette 'neon)  ; or 'downpour
   ```
   Returns the raw alist using the theme's internal semantic keys:
-  `mono0`..`mono7` (perceptual gray ramp for main content; `mono0` is the
-  background, `mono7` the foreground for the variant; de-facto roles: mono1 for
-  subtle selection/highlight on main, etc.) plus `dim0`, `dim1` (dedicated dim
-  levels between mono0 and mono1 for non-selected/unreal support in
-  auto-dim-other-buffers-mode and solaire-mode) plus the 8 accent hues `red
-  orange yellow green cyan blue purple magenta`.
-  The core published palette for export remains the 16 (8 mono + 8 accent);
-  dim* are extras for Emacs UI faces.
+  `mono0`..`mono7` (perceptual gray ramp; `mono1` is the background and `mono7`
+  the foreground for the variant, with `mono0` lying outside `mono1`, away from
+  the foreground) plus `dim0`, `dim1` (dedicated dim levels for
+  non-selected/unreal support in auto-dim-other-buffers-mode and solaire-mode)
+  plus the 8 accent hues `red orange yellow green cyan blue purple magenta`.
+  Only the 8 mono levels and the 8 hues reach the terminal export; `dim0` and
+  `dim1` are for Emacs faces.
 
 - For external tools (Alacritty, kitty, WezTerm, ghostty, dircolors, terminal OSC
   sequences, etc.):
@@ -87,7 +86,7 @@ The theme provides face definitions for two popular de-facto modes that dim non-
 - `auto-dim-other-buffers-mode`
 - `solaire-mode`
 
-Their dim faces use the dedicated `dim0` level (between `mono0` and the main aux step at `mono1`). This gives a subtle auxiliary tone for non-selected areas without affecting the de-facto subtle selection/highlight roles that live at `mono1` on main content.
+Their dim faces use the dedicated `dim0` level, which shifts the background by less than a full step of the main ramp. This gives a subtle auxiliary tone for non-selected areas without spending a level of the ramp itself.
 
 `dim1` is also available in the palette for further customization.
 
@@ -96,24 +95,24 @@ No colors outside the published structure are used.
 Example JSON (via `rustcity-export-palette 'json 'neon`):
 ```json
 {
-  "background": "#1a2241",
-  "brightcyan": "#1a2241",
-  "black": "#263059",
-  "brightblack": "#323f72",
-  "brightblue": "#3f4f8c",
-  "brightgreen": "#4d5fa6",
-  "white": "#5c70bf",
-  "brightyellow": "#7382c9",
-  "foreground": "#8995d2",
-  "brightwhite": "#8995d2",
-  "red": "#ff618b",
-  "brightred": "#ef7700",
-  "yellow": "#b29700",
-  "green": "#73a800",
+  "background": "#253058",
+  "foreground": "#8995d1",
+  "black": "#192141",
+  "brightblack": "#323f71",
+  "brightgreen": "#3f4e8b",
+  "brightyellow": "#4c5ea6",
+  "brightblue": "#5c6fbe",
+  "white": "#7282c8",
+  "brightwhite": "#8995d1",
+  "red": "#fe608a",
+  "brightred": "#ee7700",
+  "yellow": "#b19600",
+  "green": "#73a700",
   "cyan": "#00a9b1",
-  "blue": "#369bff",
-  "brightmagenta": "#b67cff",
-  "magenta": "#ff3ff8"
+  "brightcyan": "#00a9b1",
+  "blue": "#359bff",
+  "brightmagenta": "#b57cff",
+  "magenta": "#fe3ef8"
 }
 ```
 
@@ -123,26 +122,36 @@ Example JSON (via `rustcity-export-palette 'json 'neon`):
 
 | Role / ANSI key     | Internal key | neon (dark) | downpour (light) |
 |---------------------|--------------|-------------|------------------|
-| background, brightcyan | mono0     | #1a2241         | #d5d7df            |
-| black               | mono1        | #263059         | #c1c3d0            |
-| brightblack         | mono2        | #323f72         | #adb0c1            |
-| brightblue          | mono3        | #3f4f8c         | #999db2            |
-| brightgreen         | mono4        | #4d5fa6         | #868aa4            |
-| white               | mono5        | #5c70bf         | #737895            |
-| brightyellow        | mono6        | #7382c9         | #626783            |
-| foreground, brightwhite | mono7   | #8995d2         | #52566e            |
-| red                 | red          | #ff618b         | #ff3377            |
-| brightred           | orange       | #ef7700         | #d76b00            |
-| yellow              | yellow       | #b29700         | #a08700            |
-| green               | green        | #73a800         | #679700            |
-| cyan                | cyan         | #00a9b1         | #00989f            |
-| blue                | blue         | #369bff         | #008cef            |
-| brightmagenta       | purple       | #b67cff         | #ac63ff            |
-| magenta             | magenta      | #ff3ff8         | #f200eb            |
+| black               | mono0        | #192141     | #d5d6df          |
+| background          | mono1        | #253058     | #c0c3d0          |
+| brightblack         | mono2        | #323f71     | #acafc1          |
+| brightgreen         | mono3        | #3f4e8b     | #999cb2          |
+| brightyellow        | mono4        | #4c5ea6     | #858aa3          |
+| brightblue          | mono5        | #5c6fbe     | #737894          |
+| white               | mono6        | #7282c8     | #616682          |
+| foreground, brightwhite | mono7    | #8995d1     | #51556d          |
+| red                 | red          | #fe608a     | #fe3276          |
+| brightred           | orange       | #ee7700     | #d76a00          |
+| yellow              | yellow       | #b19600     | #9f8700          |
+| green               | green        | #73a700     | #679600          |
+| cyan, brightcyan    | cyan         | #00a9b1     | #00979f          |
+| blue                | blue         | #359bff     | #008bee          |
+| brightmagenta       | purple       | #b57cff     | #ac62ff          |
+| magenta             | magenta      | #fe3ef8     | #f200eb          |
+
+The grey rows are in ramp order: `mono0` lies outside the background, away from
+the foreground, and each `bright` slot is lighter than the plain one of the same
+name (in `neon`; in `downpour`, where the foreground is the darker end, the
+relationship is the same distance in the other direction). `dim0` and `dim1` are
+not in the table — see below.
 
 Exact values are generated from HSLuv at load time (with `rustcity-hsl-correction` deltas applied if set). They are exposed via the HSL constants (`rustcity-neon-hsl`, `rustcity-downpour-hsl`), the derived hex variables (`rustcity-neon`, `rustcity-downpour`), and the accessors `rustcity-palette` (internal semantic keys) / `rustcity-export-palette` (ANSI/terminal names for external use).
 
-For terminal emulators that want a 16-color palette, use the values from `rustcity-export-palette` (or run it and copy). The 16 ANSI slots are assigned from the 16 internal colors; some "bright" slots receive gray-ramp entries because the design uses one unified 8-step mono ramp + 8 saturated accent hues (see `rustcity-export-palette` for the full mapping including aliases like brightcyan=background). 'hex-list gives the direct ordered list for slot 0-15. Magit and Marginalia faces are also provided and tuned to the mono ramp (with higher-pop accents) for harmony in the neon aesthetic.
+For terminal emulators that want a 16-color palette, use the values from `rustcity-export-palette` (or run it and copy). The background and the foreground are `mono1` and `mono7`, so they take the terminal's own background and foreground rather than a numbered slot, and the whole eight-step ramp reaches the terminal between them. `brightblack` holds `mono2` — dim but readable, which is what TUI tools actually want from that slot — and `black` holds `mono0`, the level outside the background. Eight hues cannot fill twelve hue slots, so `brightcyan` repeats `cyan`; the other three bright hue slots carry ramp levels.
+
+`dim0` and `dim1` are not exported. They mean "this Emacs window is not the selected one", which a terminal has no notion of, so a slot spent on one would be a slot no program could ask for. Leaving them out is what lets `brightcyan` go back to being cyan.
+
+`'hex-list` gives the direct ordered list for slots 0-15. Magit and Marginalia faces are also provided and tuned to the mono ramp (with higher-pop accents) for harmony in the neon aesthetic.
 
 ## License
 
