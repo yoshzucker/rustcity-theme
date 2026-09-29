@@ -259,8 +259,11 @@ the selected window\", which a terminal has no notion of."
   ;; single step never has to say "you are here" and "this is idle" at once.
   ;;
   ;;   mono0  what is current inside the content -- the line point is on,
-  ;;          the region, the hunk you are reading, the candidate you are on.
-  ;;          It lies outside mono1, away from fg: a recess, not a rise.
+  ;;          the hunk you are reading, the candidate you are on.  It lies
+  ;;          outside mono1, away from fg: a recess, not a rise.  Every
+  ;;          foreground gains contrast against it, which is why the step
+  ;;          that marks where you are is the one below the surface and not
+  ;;          above it.
   ;;   mono1  the content surface itself, with its fringe, line numbers, the
   ;;          frame's internal border and the dividers between windows, which
   ;;          stay flush so that no seam fights the planes.  The figure of an
@@ -272,6 +275,17 @@ the selected window\", which a terminal has no notion of."
   ;;          outside the hunk point is in, a dimmed panel.  It is also the
   ;;          plane a buffer alternates onto when it has to band its own
   ;;          content, as an expanded dired subtree or a weekend column does.
+  ;;
+  ;;          The region is here rather than in the recess with the rest of
+  ;;          what is current, and it is the one place the state axis is
+  ;;          read against itself.  A selection always contains point, so it
+  ;;          always lies over the line mono0 is already marking: at the
+  ;;          same step the two cannot be told apart, and a selection whose
+  ;;          extent cannot be seen is not doing its work.  Above the
+  ;;          surface costs the selected text some contrast -- body text
+  ;;          4.4:1 on the surface against 3.4:1 here -- and mono3 would
+  ;;          cost far more, taking comments to 1.7:1, so this is the
+  ;;          nearest step that separates.
   ;;   mono3  what frames or labels content rather than being content --
   ;;          tab-bar and tab-line fields, the header line, tooltips and
   ;;          child-frame rims, column titles, table and hunk headings.
@@ -387,7 +401,7 @@ the selected window\", which a terminal has no notion of."
   ;; What rustcity does differently is below that stratum rather than
   ;; around it.  The survey's ha-ha themes put chrome in the recess;
   ;; rustcity leaves chrome sunken and gives the recess to content --
-  ;; mono0 carries the highlight, the region, the current hunk.  The
+  ;; mono0 carries the highlight, the current line, the current hunk.  The
   ;; street stays the street, and what you are pointing at is cut into
   ;; it.  It is available for the same reason ha-ha would be: the
   ;; content surface sits at mono1, not at the end of the ramp.
@@ -692,7 +706,7 @@ the selected window\", which a terminal has no notion of."
    ;; still take mono0, the same as anywhere else.
    `(solaire-default-face ((,class (:background ,dim0))))
    `(solaire-hl-line-face ((,class (:background ,mono0))))
-   `(solaire-region-face ((,class (:background ,mono0 :extend t))))
+   `(solaire-region-face ((,class (:background ,mono2 :extend t))))
    `(auto-dim-other-buffers ((,class (:background ,dim0))))
    `(auto-dim-other-buffers-hide ((,class (:foreground ,dim0 :background ,dim0))))
 
@@ -711,7 +725,7 @@ the selected window\", which a terminal has no notion of."
    ;; subtle separation from window-divider-mode (see the Gutter section
    ;; below).
    `(vertical-border ((,class (:foreground ,mono1))))
-   `(region ((,class (:background ,mono0))))
+   `(region ((,class (:background ,mono2))))
    `(secondary-selection ((,class (:background ,mono2))))
    `(highlight ((,class (:background ,mono0))))
    `(shadow ((,class (:foreground ,mono4))))
